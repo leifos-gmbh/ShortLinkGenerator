@@ -63,7 +63,6 @@ class ilShortLinkTable extends ilTable2GUI
         $txtinput_url = new ilTextInputGUI($this->shliPlugin->txt('filter_url_title'), 'url_filter');
         $txtinput_url->setSize(16);
         $txtinput_url->setMaxLength(64);
-        
         $this->addFilterItem($txtinput_shortlink);
         $this->addFilterItem($txtinput_url);
         
@@ -73,12 +72,42 @@ class ilShortLinkTable extends ilTable2GUI
     
     public function getFilterShortLinkValue() : string 
     {
-        return $this->getFilterItemByPostVar('shortlink_filter')->getValue();
+        $txtinput_shortlink = $this->getFilterItemByPostVar('shortlink_filter');
+        if(is_null($txtinput_shortlink)) 
+        {
+            return '';
+        }
+        if(is_null($txtinput_shortlink->getValue())) 
+        {
+            return '';
+        }
+        return $txtinput_shortlink->getValue();
     }
     
     public function getFilterUrlValue() : string 
     {
-        return $this->getFilterItemByPostVar('url_filter')->getValue();
+        $txtinput_url = $this->getFilterItemByPostVar('url_filter');
+        if(is_null($txtinput_url)) 
+        {
+            return '';
+        }
+        if(is_null($txtinput_url->getValue())) 
+        {
+            return '';
+        }
+        return $txtinput_url->getValue();
+    }
+
+    public function setFilterShortLinkValue($value) 
+    {
+        $txtinput_shortlink = $this->getFilterItemByPostVar('shortlink_filter');
+        $txtinput_shortlink->setValue($value);
+    }
+    
+    public function setFilterUrlValue($value) 
+    {
+        $txtinput_url = $this->getFilterItemByPostVar('url_filter');
+        $txtinput_url->setValue($value);
     }
 
     public function populateWith(ilShortLinkArrayWrapper $shortlinks) : void

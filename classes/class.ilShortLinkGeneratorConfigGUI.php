@@ -71,7 +71,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $GLOBALS['ilTabs']->activateTab('configure');
     }
     
-    private function buildShortLinkTableForm(bool $filterReset = false) : ilShortLinkTable 
+    private function buildShortLinkTableForm() : void 
     {
         // Toolbar
         $button = ilSubmitButton::getInstance();
@@ -81,32 +81,8 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $ilToolbar = $this->DIC->toolbar();
         $ilToolbar->setFormAction($this->ilCtrl->getFormAction($this));
         $ilToolbar->addButtonInstance($button);
-        
-        // Table content
-        $table = new ilShortLinkTable($this);
-        $patternName = '/.*/';
-        $patternUrl = '/.*/';
-        
-        if($filterReset) 
-        {
-            $table->resetFilter();
-            $table->resetOffset();
-        }
-        else 
-        {
-            $table->writeFilterToSession();
-            $patternName = '/' . $table->getFilterShortLinkValue() . '/';
-            $patternUrl = '/' . $table->getFilterUrlValue() . '/';
-            $patternName = strcmp($patternName, '//') == 0 ? '/.*/' : $patternName;
-            $patternUrl = strcmp($patternUrl, '//') == 0 ? '/.*/' : $patternUrl;
-        }
-        
-        $shortlinks = $this->shortLinkCollection->getShortLinksByPattern($patternName, $patternUrl);
-        
-        $table->populateWith($shortlinks);
-        return $table;
     }
-    
+
     private function buildShortLinkInputForm() : ilPropertyFormGUI
     {    
         $form = new ilPropertyFormGUI();
@@ -155,6 +131,16 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $this->ilCtrl->clearParameterByClass(get_class($this), 'shliid');  
         return $form;
     }
+        
+    private function populateTable(ilShortLinkTable $table) : void
+    {
+        $patternName = '/' . $table->getFilterShortLinkValue() . '/';
+        $patternUrl = '/' . $table->getFilterUrlValue() . '/';
+        $patternName = strcmp($patternName, '//') == 0 ? '/.*/' : $patternName;
+        $patternUrl = strcmp($patternUrl, '//') == 0 ? '/.*/' : $patternUrl;
+        $shortlinks = $this->shortLinkCollection->getShortLinksByPattern($patternName, $patternUrl);    
+        $table->populateWith($shortlinks);
+    }
     
     private function displayShortLinkBuildPage() : void 
     {
@@ -164,7 +150,9 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
 
     private function displayShortLinkTablePage(): void 
     {
-        $table = $this->buildShortLinkTableForm();
+        $this->buildShortLinkTableForm();
+        $table = new ilShortLinkTable($this);
+        $this->populateTable($table);
         $table->addHtmlTo($this->tpl);
     }
     
@@ -386,13 +374,21 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
     
     private function applyFilter()
     {
-        $table = $this->buildShortLinkTableForm();
+        $this->buildShortLinkTableForm();
+        $table = new ilShortLinkTable($this);
+        $table->writeFilterToSession();
+        $table->resetOffset();
+        $this->populateTable($table);
         $table->addHtmlTo($this->tpl);
     }
     
     private function resetFilter() 
     {
-        $table = $this->buildShortLinkTableForm(true);
+        $this->buildShortLinkTableForm();
+        $table = new ilShortLinkTable($this);
+        $table->resetFilter();
+        $table->resetOffset();
+        $this->populateTable($table);
         $table->addHtmlTo($this->tpl);
     }
     
@@ -417,7 +413,9 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
             case 'deleteSelected':
             case 'applyFilter':
             case 'resetFilter':
+                echo $cmd;
                 $this->$cmd();
+                
                 break;
             default:
                 throw new Exception('Undefined command: \'' . $cmd . '\'');
