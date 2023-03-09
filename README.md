@@ -9,7 +9,7 @@ Clone the Plugin from github:
     git clone ### TODO
 
 Add the following two lines to the .htaccess file located in the ILIAS_6
-directory at the end of the section '<IfModule mod_rewrite.c>':
+directory at the end of the section 'IfModule mod_rewrite.c':
 
     RewriteCond %{REQUEST_URI} /([a-z]|[A-Z])([A-Z]|[a-z]|[0-9])+$
     RewriteRule ^(.*)$ /ILIAS_6/Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
