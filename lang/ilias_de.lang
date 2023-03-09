@@ -1,0 +1,23 @@
+filter_shortlink_title#:#Titel
+filter_url_title#:#Ziel URL
+gui_tab_shortlinks#:#Shortlinks
+gui_title_edit_shortlink_page#:#Shortlink Bearbeiten
+gui_title_build_shortlink_page#:#Neuer Shortlink
+gui_message_confirm_delete#:#Bitte bestätigen Sie das Löschen des Shortlinks.
+gui_message_confirm_delete_multiple#:#Bitte bestätigen Sie das Löschen der Shortlinks.
+gui_message_shortlink_deleted#:#Shortlink erfolgreich gelöscht.
+gui_button_new_shortlink#:#Neuer Shortlink
+gui_button_save_changes#:#Änderungen Speichern
+gui_button_save#:#Speichern
+gui_error_another_shortlink_with_url_exists#:#Shortlink mit derselben URL existiert bereits.
+gui_error_another_shortlink_with_name_exists#:#Shortlink mit demselben Namen existiert bereits.
+gui_error_select_one#:#Es muss mindestens ein Element ausgewählt werden.
+gui_error_shortlink_url_invalid#:#Ungültige Url
+gui_error_shortlink_name_invalid#:#Ungültiger Name. Muss mit einem Buchstaben beginnen und darf nur aus Buchstaben und Zahlen bestehen.
+gui_txtinputfield_shortlink#:#Titel
+gui_txtinputfield_url#:#Ziel URL
+table_col_title#:#Titel
+table_col_targeturl#:#Ziel URL
+table_dropdown_edit#:#Bearbeiten
+table_dropdown_delete#:#Löschen
+table_dropdown_title#:#Aktionen
