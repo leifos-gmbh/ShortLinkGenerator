@@ -133,8 +133,10 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
     
     public function getShortLinkById(int $id): ?ilShortLink
     {
-        foreach($this->shortLinks as $currentShortLink) 
+        $this->shortLinks->rewind();
+        for(;$this->shortLinks->valid(); $this->shortLinks->next()) 
         {
+            $currentShortLink = $this->shortLinks->current();
             if($currentShortLink->getId() == $id) 
             {
                 return $currentShortLink;
@@ -145,8 +147,10 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
     
     public function getShortLinkByName(string $name): ?ilShortLink
     {
-        foreach($this->shortLinks as $currentShortLink) 
+        $this->shortLinks->rewind();
+        for(;$this->shortLinks->valid(); $this->shortLinks->next()) 
         {
+            $currentShortLink = $this->shortLinks->current();
             if(strcmp($currentShortLink->getName(), $name) == 0) 
             {
                 return $currentShortLink;
@@ -157,8 +161,10 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
     
     public function getShortLinkByUrl(string $url): ?ilShortLink
     {
-        foreach($this->shortLinks as $currentShortLink) 
+        $this->shortLinks->rewind();
+        for(;$this->shortLinks->valid(); $this->shortLinks->next()) 
         {
+            $currentShortLink = $this->shortLinks->current();
             if(strcmp($currentShortLink->getTargetUrl(), $url) == 0) 
             {
                 return $currentShortLink;
@@ -177,8 +183,10 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
             return false;
         }
         
-        foreach($this->shortLinks as $currentShortLink) 
+        $this->shortLinks->rewind();
+        for(;$this->shortLinks->valid(); $this->shortLinks->next()) 
         {
+            $currentShortLink = $this->shortLinks->current();
             if($shortLink->sharesAPropertyWith($currentShortLink)) 
             {
                 $index = $this->shortLinks->key();
@@ -198,23 +206,25 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
     
     public function removeShortLinkById(int $id): bool
     {
-        return $this->removeShortLink($this->getShortLinkById($id));
+        return $this->removeShortLink(new ilShortLink($id, '', ''));
     }
     
     public function removeShortLinkByName(string $name): bool
     {
-        return $this->removeShortLink($this->getShortLinkByName($name));
+        return $this->removeShortLink(new ilShortLink(-1, $name, ''));
     }
     
     public function removeShortLinkByUrl(string $url): bool
     {
-        return $this->removeShortLink($this->getShortLinkByUrl($url));
+        return $this->removeShortLink(new ilShortLink(-1, '', $url));
     }
     
     public function containsShortLink(ilShortLink $shortLink) : bool 
     {
-        foreach($this->shortLinks as $currentShortLink) 
+        $this->shortLinks->rewind();
+        for(;$this->shortLinks->valid(); $this->shortLinks->next()) 
         {
+            $currentShortLink = $this->shortLinks->current();
             if($shortLink->sharesIdWith($currentShortLink)) 
             {
                 return true;
@@ -247,8 +257,10 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
     {        
         $shortlinks = new ilShortLinkArrayWrapper();
         
-        foreach($this->shortLinks as $currentShortLink) 
+        $this->shortLinks->rewind();
+        for(;$this->shortLinks->valid(); $this->shortLinks->next()) 
         {
+            $currentShortLink = $this->shortLinks->current();
             if(preg_match($patternName, $currentShortLink->getName()) 
                     && preg_match($patternURL, $currentShortLink->getTargetUrl())) 
             {
