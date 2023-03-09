@@ -295,25 +295,34 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
 
         if(!$shortLinkUpdated->isShortLinkNameValid()) 
         {
-            $txtInputShortLink->setAlert($this->shliPlugin->txt('shortlink_name_invalid'));
+            $txtInputShortLink->setAlert($this->shliPlugin->txt('gui_error_shortlink_name_invalid'));
             $inputValid = false;
         }
 
         if(!$shortLinkUpdated->isURLValid()) 
         {
-            $txtInputTargetUrl->setAlert($this->shliPlugin->txt('shortlink_url_invalid'));
+            $txtInputTargetUrl->setAlert($this->shliPlugin->txt('gui_error_shortlink_url_invalid'));
             $inputValid = false;
         }
         
         if(!is_null($shortLinkWithName) && !$shortLinkWithName->sharesIdWith($shortLinkUpdated)) 
         {
-            $txtInputShortLink->setAlert($this->shliPlugin->txt('another_shortlink_with_name_exists'));
+            $txtInputShortLink->setAlert($this->shliPlugin->txt('gui_error_another_shortlink_with_name_exists'));
             $inputValid = false;
         }
 
         if(!is_null($shortLinkWithUrl) && !$shortLinkWithUrl->sharesIdWith($shortLinkUpdated))
         {
-            $txtInputTargetUrl->setAlert($this->shliPlugin->txt('another_shortlink_with_url_exists'));
+            $txtInputTargetUrl->setAlert($this->shliPlugin->txt('gui_error_another_shortlink_with_url_exists'));
+            $inputValid = false;
+        }
+        
+        if(!is_null($shortLinkWithName) && !is_null($shortLinkWithUrl) 
+                && $shortLinkWithUrl->sharesIdWith($shortLinkUpdated)
+                && $shortLinkWithName->sharesIdWith($shortLinkUpdated))
+        {
+            $txtInputShortLink->setAlert($this->shliPlugin->txt('gui_error_no_changes_made_in_editor'));
+            $txtInputTargetUrl->setAlert($this->shliPlugin->txt('gui_error_no_changes_made_in_editor'));
             $inputValid = false;
         }
         

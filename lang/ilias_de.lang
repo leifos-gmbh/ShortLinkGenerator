@@ -13,7 +13,8 @@ gui_error_another_shortlink_with_url_exists#:#Shortlink mit derselben URL existi
 gui_error_another_shortlink_with_name_exists#:#Shortlink mit demselben Namen existiert bereits.
 gui_error_select_one#:#Es muss mindestens ein Element ausgewählt werden.
 gui_error_shortlink_url_invalid#:#Ungültige Url
-gui_error_shortlink_name_invalid#:#Ungültiger Name. Muss mit einem Buchstaben beginnen und darf nur aus Buchstaben und Zahlen bestehen.
+gui_error_shortlink_name_invalid#:#Ungültiger Titel. Muss mit einem Buchstaben beginnen und darf nur aus Buchstaben und Zahlen bestehen.
+gui_error_no_changes_made_in_editor#:#Es wurden keine Änderungen vorgenommen.
 gui_txtinputfield_shortlink#:#Titel
 gui_txtinputfield_url#:#Ziel URL
 table_col_title#:#Titel
