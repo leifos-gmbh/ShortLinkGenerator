@@ -6,7 +6,7 @@ Navigate to the ILIAS_6 directory and create the folder structure with:
 Clone the Plugin from github:
 
     cd Customizing/global/plugins/Services/UIComponent/UserInterfaceHook
-    git clone ### TODO
+    git clone https://github.com/leifos-gmbh/ShortLinkGenerator.git
 
 Add the following two lines to the .htaccess file located in the ILIAS_6
 directory at the end of the section 'IfModule mod_rewrite.c':
