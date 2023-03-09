@@ -19,7 +19,7 @@ directory, or Apache-Config  at the end of the section 'IfModule mod_rewrite.c':
 ```apacheconf
     RewriteEngine On # <-- Only needed if the rewrite engine is not already enabled.
     RewriteCond %{REQUEST_URI} /([a-z]|[A-Z])([A-Z]|[a-z]|[0-9])+$
-    RewriteRule ^(.*)$ /ILIAS_6/Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
+    RewriteRule ^(.*)$ /'ILIASmain'/Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
 ```
 
 If the 'IfModule mod_rewrite.c' section does not exist, instead add:
@@ -28,9 +28,10 @@ If the 'IfModule mod_rewrite.c' section does not exist, instead add:
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteCond %{REQUEST_URI} /([a-z]|[A-Z])([A-Z]|[a-z]|[0-9])+$
-    RewriteRule ^(.*)$ /ILIAS_6/Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
+    RewriteRule ^(.*)$ /'ILIASmain'/Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
 </IfModule>
 ```
+Replace 'ILIASmain' with the name of the ILIAS main directory.
 
 Finally the shortlink-plugin needs to be installed by an administrator by selecting the install option of the shortlink-plugin on the "Administration->Plugins" page.
 
