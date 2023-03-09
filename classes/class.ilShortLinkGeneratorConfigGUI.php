@@ -413,9 +413,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
             case 'deleteSelected':
             case 'applyFilter':
             case 'resetFilter':
-                echo $cmd;
                 $this->$cmd();
-                
                 break;
             default:
                 throw new Exception('Undefined command: \'' . $cmd . '\'');

@@ -139,8 +139,6 @@ class ilShortLinkTable extends ilTable2GUI
             $a_set['id']
         );
         
-        echo $a_set['parent'];
-        
         $actions = new ilAdvancedSelectionListGUI();
         $actions->setId($a_set['id']);
         $actions->setListTitle($this->shliPlugin->txt("table_dropdown_title"));   
