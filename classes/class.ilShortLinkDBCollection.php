@@ -105,7 +105,6 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
         {
             return null;
         }
-        
         if ($this->containsShortLink($dummyShortLink)) 
         {
             return null;
@@ -126,6 +125,7 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
         {
             return false;
         }
+        
         $this->updateShortLinkInDB($replacement);
         
         return true;
