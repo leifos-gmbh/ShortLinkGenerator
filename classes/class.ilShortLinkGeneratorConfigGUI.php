@@ -90,6 +90,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         if($filterReset) 
         {
             $table->resetFilter();
+            $table->resetOffset();
         }
         else 
         {
@@ -103,7 +104,6 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $shortlinks = $this->shortLinkCollection->getShortLinksByPattern($patternName, $patternUrl);
         
         $table->populateWith($shortlinks);
-        $table->resetOffset();
         return $table;
     }
     
