@@ -6,11 +6,11 @@ Navigate to the ILIAS main directory and create the folder structure with:
     mkdir -p Customizing/global/plugins/Services/UIComponent/UserInterfaceHook
 ```
 
-Clone the ilias_6 branch of the shortlink-plugin from github:
+Clone the 6 branch of the shortlink-plugin from github:
 
 ```bash
     cd Customizing/global/plugins/Services/UIComponent/UserInterfaceHook
-    git clone --branch ilias_6 https://github.com/leifos-gmbh/ShortLinkGenerator.git
+    git clone --branch 6 https://github.com/leifos-gmbh/ShortLinkGenerator.git
 ```
 
 Add the following lines to the .htaccess file located in the ILIAS main
@@ -19,8 +19,7 @@ directory, or Apache-Config, at the end of the section 'IfModule mod_rewrite.c':
 ```apacheconf
     RewriteEngine On # <-- Only needed if the rewrite engine is not already enabled.
     RewriteCond %{REQUEST_URI} /([a-z]|[A-Z])([A-Z]|[a-z]|[0-9])+$
-    # Replace 'MyILIASMainDirectory' with the name of your ILIAS main directory.
-    RewriteRule ^(.*)$ /'MyILIASMainDirectory'/Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
+    RewriteRule ^(.*)$ /Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
 ```
 
 If the 'IfModule mod_rewrite.c' section does not exist, instead add:
@@ -29,16 +28,8 @@ If the 'IfModule mod_rewrite.c' section does not exist, instead add:
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteCond %{REQUEST_URI} /([a-z]|[A-Z])([A-Z]|[a-z]|[0-9])+$
-    # Replace 'MyILIASMainDirectory' with the name of your ILIAS main directory.
-    RewriteRule ^(.*)$ /'MyILIASMainDirectory'/Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
+    RewriteRule ^(.*)$ /Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
 </IfModule>
-```
-
-Replace 'MyILIASMainDirectory' in the file path used by the rewrite rule with the name of your main ILIAS directory.
-For example, if the ILIAS main directory is named 'ILIAS_6' the rewrite rule looks like this:
-
-```apacheconf
-    RewriteRule ^(.*)$ /ILIAS_6/Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
 ```
 
 Finally, the shortlink-plugin needs to be installed by an administrator by selecting the install option for the shortlink-plugin on the "Administration->Plugins" page.

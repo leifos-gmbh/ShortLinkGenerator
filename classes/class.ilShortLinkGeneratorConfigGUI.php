@@ -6,8 +6,6 @@
  */
 class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
 {   
-    private $DIC;
-
     /**
      * @var ilLanguage
      */
@@ -22,6 +20,18 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
      * @var ilTemplate
      */
     private $tpl;
+
+    /**
+     *
+     * @var ilTabs
+     */
+    private $ilTabs;
+    
+    /**
+     *
+     * @var ilToolbar
+     */
+    private $ilToolbar;
 
     /**
      * @var ilLogger
@@ -44,10 +54,11 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
     public function __construct()
     {
         global $DIC;
-        $this->DIC = $DIC;
-        $this->lng = $this->DIC->language();
-        $this->ilCtrl = $this->DIC->ctrl();
-        $this->tpl = $this->DIC->ui()->mainTemplate();
+        $this->lng = $DIC->language();
+        $this->ilCtrl = $DIC->ctrl();
+        $this->tpl = $DIC->ui()->mainTemplate();
+        $this->ilTabs = $DIC->tabs();
+        $this->ilToolbar = $DIC->toolbar();
         $this->logger = ilLoggerFactory::getLogger('shli');
         $this->shliPlugin = $this->getPluginObject();
 
@@ -62,13 +73,12 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
     
     private function buildTabs(): void 
     {
-        $ilTabs = $this->DIC->tabs();
-        $ilTabs->addTab(
+        $this->ilTabs->addTab(
             'configure',
             $this->shliPlugin->txt('gui_tab_shortlinks'),
             $this->ilCtrl->getLinkTarget($this, 'configure')
         );
-        $GLOBALS['ilTabs']->activateTab('configure');
+        $this->ilTabs->activateTab('configure');
     }
     
     private function buildShortLinkTableForm() : void 
@@ -78,13 +88,19 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $button->setCaption($this->shliPlugin->txt('gui_button_new_shortlink'), false);
         $button->setCommand('displayShortLinkBuildPage');
         
-        $ilToolbar = $this->DIC->toolbar();
-        $ilToolbar->setFormAction($this->ilCtrl->getFormAction($this));
-        $ilToolbar->addButtonInstance($button);
+        $this->ilToolbar->setFormAction($this->ilCtrl->getFormAction($this));
+        $this->ilToolbar->addButtonInstance($button);
     }
-
-    private function buildShortLinkInputForm() : ilPropertyFormGUI
-    {    
+    
+    private function buildShortLinkInputForm(bool $isEditMode) : ilPropertyFormGUI 
+    {
+        // Pass on shortlink id
+        if($isEditMode) 
+        {
+            $id = (int)$_GET['shliid'];
+            $this->ilCtrl->setParameterByClass(get_class($this), 'shliid', $id);
+        }
+        
         $form = new ilPropertyFormGUI();
         $form->setFormAction($this->ilCtrl->getFormAction($this));
         $form->setTitle($this->shliPlugin->txt('gui_title_build_shortlink_page'));
@@ -99,36 +115,24 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $txtInputTargetUrl->setMaxLength(300);
         $form->addItem($txtInputTargetUrl);
         
-        $form->addCommandButton('saveShortLink', $this->shliPlugin->txt('gui_button_save'));
-        $form->addCommandButton('displayShortLinkTablePage', $this->lng->txt('cancel'));
-        return $form;
-    }
-    
-    private function buildShortLinkEditForm() : ilPropertyFormGUI 
-    {
-        // pass on shortlink id
-        $id = (int)$_GET['shliid'];
-        $this->ilCtrl->setParameterByClass(get_class($this), 'shliid', $id);
-        
-        // Build form   
-        $form = new ilPropertyFormGUI();
-        $form->setFormAction($this->ilCtrl->getFormAction($this));
-        $form->setTitle($this->shliPlugin->txt('gui_title_edit_shortlink_page'));
-        
-        $txtInputShortLink = new ilTextInputGUI($this->shliPlugin->txt('gui_txtinputfield_shortlink'), 'shortlink');
-        $txtInputShortLink->setRequired(true);
-        $txtInputShortLink->setMaxLength(40);
-        $form->addItem($txtInputShortLink);
-        
-        $txtInputTargetUrl = new ilTextInputGUI($this->shliPlugin->txt('gui_txtinputfield_url'), 'targeturl');
-        $txtInputTargetUrl->setRequired(true);
-        $txtInputTargetUrl->setMaxLength(300);
-        $form->addItem($txtInputTargetUrl);
-
-        $form->addCommandButton('saveEditedShortLink', $this->shliPlugin->txt('gui_button_save_changes'));
+        // Edit button
+        if($isEditMode) 
+        {
+            $form->addCommandButton('saveEditedShortLink', $this->shliPlugin->txt('gui_button_save_changes'));
+        }
+        // Save Button
+        if(!$isEditMode) 
+        {
+            $form->addCommandButton('saveShortLink', $this->shliPlugin->txt('gui_button_save'));
+        }
         $form->addCommandButton('displayShortLinkTablePage', $this->lng->txt('cancel'));
         
-        $this->ilCtrl->clearParameterByClass(get_class($this), 'shliid');  
+        // Clear shortlink id parameter
+        if($isEditMode) 
+        {    
+            $this->ilCtrl->clearParameterByClass(get_class($this), 'shliid'); 
+        }
+        
         return $form;
     }
         
@@ -144,7 +148,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
     
     private function displayShortLinkBuildPage() : void 
     {
-        $form = $this->buildShortLinkInputForm();
+        $form = $this->buildShortLinkInputForm(false);
         $this->tpl->setContent($form->getHTML());
     }
 
@@ -159,7 +163,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
     private function displayShortLinkEditPage() : void 
     {
         $id = (int)$_GET['shliid'];
-        $form = $this->buildShortLinkEditForm();
+        $form = $this->buildShortLinkInputForm(true);
 
         // Fill form
         $shortLink = $this->shortLinkCollection->getShortLinkById($id);
@@ -173,7 +177,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
     
     private function saveShortLink() : void 
     {
-        $form = $this->buildShortLinkInputForm();
+        $form = $this->buildShortLinkInputForm(false);
         
         if($this->checkUserInput($form)) // Input validation succeeded
         {
@@ -195,9 +199,9 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         }
     }
     
-    private function saveEditedShortLink() 
+    private function saveEditedShortLink() : void
     {
-        $form = $this->buildShortLinkEditForm();
+        $form = $this->buildShortLinkInputForm(true);
         
         if($this->checkUserInputEditShortLink($form)) // Input validation succeeded 
         {
@@ -238,25 +242,33 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
 
         if(!$shortLink->isShortLinkNameValid()) 
         {
-            $txtInputShortLink->setAlert($this->shliPlugin->txt('gui_error_shortlink_name_invalid'));
+            $txtInputShortLink->setAlert($txtInputShortLink->getAlert() 
+                    . '<br>' 
+                    . $this->shliPlugin->txt('gui_error_shortlink_name_invalid'));
             $inputValid = false;
         }
 
         if(!$shortLink->isURLValid()) 
         {
-            $txtInputTargetUrl->setAlert($this->shliPlugin->txt('gui_error_shortlink_url_invalid'));
+            $txtInputTargetUrl->setAlert($txtInputTargetUrl->getAlert() 
+                    . '<br>' 
+                    . $this->shliPlugin->txt('gui_error_shortlink_url_invalid'));
             $inputValid = false;
         }
         
         if($this->shortLinkCollection->containsShortLinkWithName($slName)) 
         {
-            $txtInputShortLink->setAlert($this->shliPlugin->txt('gui_error_another_shortlink_with_name_exists'));
+            $txtInputShortLink->setAlert($txtInputShortLink->getAlert() 
+                    . '<br>' 
+                    . $this->shliPlugin->txt('gui_error_another_shortlink_with_name_exists'));
             $inputValid = false;
         }
 
         if($this->shortLinkCollection->containsShortLinkWithUrl($slUrl)) 
         {
-            $txtInputTargetUrl->setAlert($this->shliPlugin->txt('gui_error_another_shortlink_with_url_exists'));
+            $txtInputTargetUrl->setAlert($txtInputTargetUrl->getAlert() 
+                    . '<br>' 
+                    . $this->shliPlugin->txt('gui_error_another_shortlink_with_url_exists'));
             $inputValid = false;
         }
         
@@ -283,25 +295,33 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
 
         if(!$shortLinkUpdated->isShortLinkNameValid()) 
         {
-            $txtInputShortLink->setAlert($this->shliPlugin->txt('gui_error_shortlink_name_invalid'));
+            $txtInputShortLink->setAlert($txtInputShortLink->getAlert() 
+                    . '<br>' 
+                    . $this->shliPlugin->txt('gui_error_shortlink_name_invalid'));
             $inputValid = false;
         }
 
         if(!$shortLinkUpdated->isURLValid()) 
         {
-            $txtInputTargetUrl->setAlert($this->shliPlugin->txt('gui_error_shortlink_url_invalid'));
+            $txtInputTargetUrl->setAlert($txtInputTargetUrl->getAlert() 
+                    . '<br>' 
+                    . $this->shliPlugin->txt('gui_error_shortlink_url_invalid'));
             $inputValid = false;
         }
         
         if(!is_null($shortLinkWithName) && !$shortLinkWithName->sharesIdWith($shortLinkUpdated)) 
         {
-            $txtInputShortLink->setAlert($this->shliPlugin->txt('gui_error_another_shortlink_with_name_exists'));
+            $txtInputShortLink->setAlert($txtInputShortLink->getAlert() 
+                    . '<br>' 
+                    . $this->shliPlugin->txt('gui_error_another_shortlink_with_name_exists'));
             $inputValid = false;
         }
 
         if(!is_null($shortLinkWithUrl) && !$shortLinkWithUrl->sharesIdWith($shortLinkUpdated))
         {
-            $txtInputTargetUrl->setAlert($this->shliPlugin->txt('gui_error_another_shortlink_with_url_exists'));
+            $txtInputTargetUrl->setAlert($txtInputTargetUrl->getAlert() 
+                    . '<br>' 
+                    . $this->shliPlugin->txt('gui_error_another_shortlink_with_url_exists'));
             $inputValid = false;
         }
         
@@ -309,8 +329,12 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
                 && $shortLinkWithUrl->sharesIdWith($shortLinkUpdated)
                 && $shortLinkWithName->sharesIdWith($shortLinkUpdated))
         {
-            $txtInputShortLink->setAlert($this->shliPlugin->txt('gui_error_no_changes_made_in_editor'));
-            $txtInputTargetUrl->setAlert($this->shliPlugin->txt('gui_error_no_changes_made_in_editor'));
+            $txtInputShortLink->setAlert($txtInputShortLink->getAlert() 
+                    . '<br>' 
+                    . $this->shliPlugin->txt('gui_error_no_changes_made_in_editor'));
+            $txtInputTargetUrl->setAlert($txtInputTargetUrl->getAlert() 
+                    . '<br>' 
+                    . $this->shliPlugin->txt('gui_error_no_changes_made_in_editor'));
             $inputValid = false;
         }
         
@@ -332,12 +356,13 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $this->tpl->setContent($confirm->getHTML());
     }
     
-    private function confirmDeleteSelected() 
+    private function confirmDeleteSelected() : void
     {
         if (!$_REQUEST['shliids'])
         {
             ilUtil::sendFailure($this->shliPlugin->txt('gui_error_select_one'), true);
-            return $this->ilCtrl->redirect($this, 'displayShortLinkTablePage');
+            $this->ilCtrl->redirect($this, 'displayShortLinkTablePage');
+            return;
         }
 
         $confirm = new ilConfirmationGUI();
@@ -355,7 +380,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $this->tpl->setContent($confirm->getHTML());
     }
     
-    private function deleteSelected() 
+    private function deleteSelected() : void
     {
         if(!$_POST['shliids']) 
         {
@@ -373,7 +398,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $this->ilCtrl->redirect($this, 'displayShortLinkTablePage');
     }
     
-    private function applyFilter()
+    private function applyFilter() : void
     {
         $this->buildShortLinkTableForm();
         $table = new ilShortLinkTable($this);
@@ -383,7 +408,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $table->addHtmlTo($this->tpl);
     }
     
-    private function resetFilter() 
+    private function resetFilter() : void
     {
         $this->buildShortLinkTableForm();
         $table = new ilShortLinkTable($this);
@@ -393,7 +418,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $table->addHtmlTo($this->tpl);
     }
     
-    private function configure() 
+    private function configure() : void
     {
         $this->displayShortLinkTablePage();
     }

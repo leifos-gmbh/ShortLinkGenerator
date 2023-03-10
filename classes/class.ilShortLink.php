@@ -30,7 +30,7 @@ class ilShortLink
      */
     private $lastEdited;
    
-    function __construct(int $id, string $shortLink, string $url, ?DateTimeImmutable $lastEdited = null)
+    public function __construct(int $id, string $shortLink, string $url, ?DateTimeImmutable $lastEdited = null)
     {
         $this->id = $id;
         $this->shortLink = $shortLink;
@@ -70,7 +70,7 @@ class ilShortLink
 
     public function isShortLinkNameValid() : bool
     {
-        $shortLinkPattern = '/([a-z]|[A-Z])([a-z]|[A-Z]|[0-9])+/i';
+        $shortLinkPattern = '/^([a-z]|[A-Z])([a-z]|[A-Z]|[0-9])+$/i';
         return preg_match($shortLinkPattern, $this->shortLink);
     }
     

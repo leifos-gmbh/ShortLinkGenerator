@@ -14,12 +14,6 @@ class ilShortLinkTable extends ilTable2GUI
     
     /**
      *
-     * @var ilLanguage
-     */
-    protected $lng;
-
-    /**
-     *
      * @var ilShortLinkGeneratorPlugin
      */
     private $shliPlugin;
@@ -31,7 +25,6 @@ class ilShortLinkTable extends ilTable2GUI
 
         global $DIC;
         $this->ilCtrl = $DIC->ctrl();
-        $this->lng = $DIC->language();
         
         $this->shliPlugin = new ilShortLinkGeneratorPlugin();
         
@@ -52,7 +45,7 @@ class ilShortLinkTable extends ilTable2GUI
         $this->setFormAction($this->ilCtrl->getFormAction($this->getParentObject()));
     }
         
-    public function initFilter()
+    public function initFilter() : void
     {
         $this->setDisableFilterHiding(true);
  
@@ -97,19 +90,7 @@ class ilShortLinkTable extends ilTable2GUI
         }
         return $txtinput_url->getValue();
     }
-
-    public function setFilterShortLinkValue($value) 
-    {
-        $txtinput_shortlink = $this->getFilterItemByPostVar('shortlink_filter');
-        $txtinput_shortlink->setValue($value);
-    }
     
-    public function setFilterUrlValue($value) 
-    {
-        $txtinput_url = $this->getFilterItemByPostVar('url_filter');
-        $txtinput_url->setValue($value);
-    }
-
     public function populateWith(ilShortLinkArrayWrapper $shortlinks) : void
     {
         // Build table data
@@ -131,7 +112,7 @@ class ilShortLinkTable extends ilTable2GUI
         $tpl->setContent($html);
     }
     
-    protected function fillRow($a_set) 
+    protected function fillRow($a_set)
     {   
         $this->ilCtrl->setParameterByClass(
             get_class($this->getParentObject()),

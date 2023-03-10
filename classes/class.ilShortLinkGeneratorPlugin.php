@@ -12,8 +12,6 @@ class ilShortLinkGeneratorPlugin extends ilUserInterfaceHookPlugin
      */
     const PNAME = 'ShortLinkGenerator';
     
-    private $DIC;
-    
     /**
      *
      * @var type ilDBInterface
@@ -24,10 +22,9 @@ class ilShortLinkGeneratorPlugin extends ilUserInterfaceHookPlugin
         parent::__construct();
         global $DIC;
         
-        $this->DIC = $DIC;
-        $this->ilDB = $this->DIC->database();
+        $this->ilDB = $DIC->database();
 
-        $this->includeClass('interface.ilShortLinkCollection.php');
+        $this->includeClass('../interfaces/interface.ilShortLinkCollection.php');
         $this->includeClass('class.ilShortLinkArrayWrapper.php');
         $this->includeClass('class.ilShortLinkTable.php');
         $this->includeClass('class.ilShortLink.php');
@@ -36,9 +33,14 @@ class ilShortLinkGeneratorPlugin extends ilUserInterfaceHookPlugin
     
     private final function classFileOf($a_classname): string
     {
-        return $class_file =
-                $this->getClassesDirectory().'/class.'.$a_classname.'.php';
+        return $this->getClassesDirectory() . '/class.'.$a_classname . '.php';
     }
+    
+    private final function interfaceFileOf($a_classname) : string
+    {
+        return $this->getClassesDirectory() . '../interfaces/interface.' . $a_classname . '.php';
+    }
+    
 
     /**
      * Auto load implementation.
@@ -47,14 +49,16 @@ class ilShortLinkGeneratorPlugin extends ilUserInterfaceHookPlugin
     private final function autoLoad($a_classname) : void
     {
         $class_file = $this->classFileOf($a_classname);
-        if (file_exists($class_file)) {
+        if (file_exists($class_file))
+        {
             include_once $class_file;
         }
-    }
-
-    protected function init() 
-    {
-        parent::init();
+        
+        $interface_file = $this->interfaceFileOf($a_classname);
+        if(file_exists($interface_file)) 
+        {
+            include_once $interface_file;
+        }
     }
 
     protected function afterUninstall() 

@@ -26,7 +26,7 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
         $this->loadShortLinksFromDB();
     }
     
-    private function loadShortLinksFromDB()
+    private function loadShortLinksFromDB() : void
     {
         $query = 'SELECT * FROM uico_uihk_shli_items';
         $results = $this->ilDB->query($query);
@@ -81,6 +81,13 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
         $this->ilDB->manipulate($query);
     }
     
+    /**
+     * 
+     * @param int $index1
+     * @param int $index2
+     * @return void
+     * @throws OutOfBoundsException if $index1 or $index2 is not a valid index.
+     */
     private function swapElements(int $index1, int $index2): void 
     {
         $index1exists = $this->shortLinks->offsetExists($index1);
@@ -88,7 +95,7 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
 
         if(!$index1exists || !$index2exists) 
         {
-            throw new Exception('Index out of bounds.');
+            throw new OutOfBoundsException('Index out of bounds.');
         }
 
         $tmp1 = $this->shortLinks->offsetGet($index1);
@@ -199,8 +206,17 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
             return false;
         }
         
-        $this->swapElements($index, $lastIndex);
-        $this->remShortLinkFromDB($this->shortLinks->pop());
+        try 
+        {
+            
+            $this->swapElements($index, $lastIndex);
+            $this->remShortLinkFromDB($this->shortLinks->pop());
+        }
+        catch (OutOfBoundsException $e) 
+        {
+            return false;
+        }
+        
         return true;
     }
     
@@ -241,15 +257,18 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
         return false;
     }
     
-    public function containsShortLinkWithId(int $id): bool {
+    public function containsShortLinkWithId(int $id): bool
+    {
         return $this->containsShortLink(new ilShortLink($id, '', ''));
     }
     
-    public function containsShortLinkWithName(string $name): bool {
+    public function containsShortLinkWithName(string $name): bool
+    {
         return $this->containsShortLink(new ilShortLink(-1, $name, ''));
     }
     
-    public function containsShortLinkWithUrl(string $url): bool {
+    public function containsShortLinkWithUrl(string $url): bool
+    {
         return $this->containsShortLink(new ilShortLink(-1, '', $url));
     }
     

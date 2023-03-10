@@ -30,22 +30,3 @@ $ilDB->createTable('uico_uihk_shli_items',
 $ilDB->addPrimaryKey('uico_uihk_shli_items', ['id']);
 $ilDB->createSequence('uico_uihk_shli_items');
 ?>
-
-<#2>
-<?php
-;
-
-?>
-
-<#3>
-<?php
-;
-// dummy because of error
-
-?>
-
-<#4>
-<?php
-;
-
-?>

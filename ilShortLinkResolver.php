@@ -1,6 +1,6 @@
 <?php
-// Change directory to /ILIAS_6
-$workDirectory = 'ILIAS_6';
+// Change working directory to ILIAS main directory.
+$inPluginDirectory = false;
 chdir('../../../../../../../');
 
 include_once './Services/Context/classes/class.ilContext.php';
@@ -16,9 +16,10 @@ try {
     // includes short link classes if plugin is not active.
     if(!class_exists('ilShortLinkDBCollection')) 
     {
-        $workDirectory = 'ShortLinkGenerator';
+        // Change working directory to the plugin directory
+        $inPluginDirectory = true;
         chdir('Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/');
-        include_once 'classes/interface.ilShortLinkCollection.php';
+        include_once 'interfaces/interface.ilShortLinkCollection.php';
         include_once 'classes/class.ilShortLinkArrayWrapper.php';
         include_once 'classes/class.ilShortLink.php';
         include_once 'classes/class.ilShortLinkDBCollection.php';
@@ -37,8 +38,8 @@ try {
 }
 catch(Exception $e)
 {
-    http_response_code(404);    
-    if(strcmp($workDirectory, 'ShortLinkGenerator') != 0) 
+    http_response_code(404);
+    if(!$inPluginDirectory) 
     {
         chdir('Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/');
     }
