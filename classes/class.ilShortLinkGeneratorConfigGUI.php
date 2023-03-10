@@ -51,7 +51,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $this->logger = ilLoggerFactory::getLogger('shli');
         $this->shliPlugin = $this->getPluginObject();
 
-        // Manually initialize the plugin class if the plugin is deaktivated.
+        // Manually initialize the plugin class if the plugin is deactivated.
         if(is_null($this->shliPlugin))
         {
             include_once 'class.ilShortLinkGeneratorPlugin.php';
@@ -336,7 +336,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
     {
         if (!$_REQUEST['shliids'])
         {
-            ilUtil::sendFailure($this->shliPlugin->txt('gui_error_select_one'));
+            ilUtil::sendFailure($this->shliPlugin->txt('gui_error_select_one'), true);
             return $this->ilCtrl->redirect($this, 'displayShortLinkTablePage');
         }
 
@@ -359,7 +359,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
     {
         if (!$_POST['shliids'])
         {
-            ilUtil::sendFailure($this->lng->txt('select_one'));
+            ilUtil::sendFailure($this->lng->txt('select_one'), true);
             return $this->ilCtrl->redirect($this, 'displayShortLinkTablePage');
         }
         
