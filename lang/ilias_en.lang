@@ -11,6 +11,7 @@ gui_button_save_changes#:#Save Changes
 gui_button_save#:#Save
 gui_error_another_shortlink_with_url_exists#:#Shortlink this URL already exists.
 gui_error_another_shortlink_with_name_exists#:#Shortlink this name already exists.
+gui_error_delete_not_possible#:#Could not delete the selected shortlinks.
 gui_error_select_one#:#Selected at least one element.
 gui_error_shortlink_url_invalid#:#Invalid Url
 gui_error_shortlink_name_invalid#:#Invalid title. Must start with a letter and can only contain letters and numbers.

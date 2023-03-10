@@ -357,10 +357,11 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
     
     private function deleteSelected() 
     {
-        if (!$_POST['shliids'])
+        if(!$_POST['shliids']) 
         {
-            ilUtil::sendFailure($this->lng->txt('select_one'), true);
-            return $this->ilCtrl->redirect($this, 'displayShortLinkTablePage');
+            ilUtil::sendFailure($this->lng->txt('gui_error_delete_not_possible'), true);
+            $this->ilCtrl->redirect($this, 'displayShortLinkTablePage');
+            return;
         }
         
         foreach ((array) $_POST['shliids'] as $shliid)
