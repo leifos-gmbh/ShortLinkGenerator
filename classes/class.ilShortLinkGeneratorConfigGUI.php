@@ -359,7 +359,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
     {
         if(!$_POST['shliids']) 
         {
-            ilUtil::sendFailure($this->lng->txt('gui_error_delete_not_possible'), true);
+            ilUtil::sendFailure($this->shliPlugin->txt('gui_error_delete_not_possible'), true);
             $this->ilCtrl->redirect($this, 'displayShortLinkTablePage');
             return;
         }
