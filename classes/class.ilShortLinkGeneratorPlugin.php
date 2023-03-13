@@ -40,11 +40,7 @@ class ilShortLinkGeneratorPlugin extends ilUserInterfaceHookPlugin
 
         $this->ilDB = $DIC->database();
 
-        $this->includeClass('../interfaces/interface.ilShortLinkCollection.php');
-        $this->includeClass('class.ilShortLinkArrayWrapper.php');
-        $this->includeClass('class.ilShortLinkTable.php');
-        $this->includeClass('class.ilShortLink.php');
-        $this->includeClass('class.ilShortLinkDBCollection.php');
+        $this->initAutoLoad();
     }
 
     final private function classFileOf($a_classname) : string
@@ -54,7 +50,7 @@ class ilShortLinkGeneratorPlugin extends ilUserInterfaceHookPlugin
 
     final private function interfaceFileOf($a_classname) : string
     {
-        return $this->getClassesDirectory() . '../interfaces/interface.' . $a_classname . '.php';
+        return $this->getClassesDirectory() . '/../interfaces/interface.' . $a_classname . '.php';
     }
 
 
