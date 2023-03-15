@@ -34,5 +34,6 @@ If the 'IfModule mod_rewrite.c' section does not exist, instead add:
 
 Finally, the shortlink-plugin needs to be installed by an administrator by selecting the install option for the shortlink-plugin on the "Administration->Plugins" page.
 
-The shortlinks can be added, edited and deletede on the configure page of the plugin.
+The shortlinks can be added, edited and deleted on the configure page of the plugin.
 The plugin does not need to be activated to work.
+
