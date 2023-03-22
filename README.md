@@ -6,11 +6,11 @@ Navigate to the ILIAS main directory and create the folder structure with:
     mkdir -p Customizing/global/plugins/Services/UIComponent/UserInterfaceHook
 ```
 
-Clone the 6 branch of the shortlink-plugin from github:
+Clone the 7 branch of the shortlink-plugin from github:
 
 ```bash
     cd Customizing/global/plugins/Services/UIComponent/UserInterfaceHook
-    git clone --branch 6 https://github.com/leifos-gmbh/ShortLinkGenerator.git
+    git clone --branch 7 https://github.com/leifos-gmbh/ShortLinkGenerator.git
 ```
 
 Add the following lines to the .htaccess file located in the ILIAS main
