@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * This file is part of ILIAS, a powerful learning management system
  * published by ILIAS open source e-Learning e.V.
@@ -21,18 +22,14 @@
  */
 class ilShortLinkTable extends ilTable2GUI
 {
-    /**
-     *
-     * @var ilCtrl
-     */
-    private $ilCtrl;
-
-    /**
-     *
-     * @var ilShortLinkGeneratorPlugin
-     */
-    private $shliPlugin;
-
+    private ilCtrl $ilCtrl;
+    private ilShortLinkGeneratorPlugin $shliPlugin;
+    private \ILIAS\UI\Implementation\Factory $ui;
+    private \ILIAS\UI\Implementation\DefaultRenderer $renderer;
+    private ilUIService $uiService;
+    private \ILIAS\UI\Component\Input\Container\Filter\Standard $filter;
+    private \ILIAS\HTTP\GlobalHttpState $http;
+    
     public function __construct($a_parent_obj, $a_parent_cmd = "", $a_template_context = "")
     {
         $this->setId('shli'); // bevor constructor
@@ -40,7 +37,11 @@ class ilShortLinkTable extends ilTable2GUI
 
         global $DIC;
         $this->ilCtrl = $DIC->ctrl();
-
+        $this->ui = $DIC->ui()->factory();
+        $this->uiService = $DIC->uiService();
+        $this->renderer = $DIC->ui()->renderer();
+        $this->http = $DIC->http();
+        
         $this->shliPlugin = new ilShortLinkGeneratorPlugin();
 
         $this->addColumn('', 'checkboxes', '1px');
@@ -55,58 +56,45 @@ class ilShortLinkTable extends ilTable2GUI
         $this->setDefaultOrderField('title');
         $this->setDefaultOrderDirection('desc');
 
-        $this->initFilter();
+        $this->buildFilter();
 
         $this->setFormAction($this->ilCtrl->getFormAction($this->getParentObject()));
     }
 
-    public function initFilter() : void
+    private function buildFilter() : void
     {
-        $this->setDisableFilterHiding(true);
+        // Define input fields
+        $shortlink_input = $this->ui->input()->field()->text($this->shliPlugin->txt('filter_shortlink_title'));
+        $url_input = $this->ui->input()->field()->text($this->shliPlugin->txt('filter_url_title'));
 
-        $txtinput_shortlink = new ilTextInputGUI($this->shliPlugin->txt('filter_shortlink_title'), 'shortlink_filter');
-        $txtinput_shortlink->setSize(16);
-        $txtinput_shortlink->setMaxLength(64);
-
-        $txtinput_url = new ilTextInputGUI($this->shliPlugin->txt('filter_url_title'), 'url_filter');
-        $txtinput_url->setSize(16);
-        $txtinput_url->setMaxLength(64);
-        $this->addFilterItem($txtinput_shortlink);
-        $this->addFilterItem($txtinput_url);
-
-        $txtinput_shortlink->readFromSession();
-        $txtinput_url->readFromSession();
+        // Define filter and attach inputs
+        $action = $this->ilCtrl->getLinkTargetByClass(get_class($this->getParentObject()), 'filter', '', true);
+        $this->filter = $this->uiService->filter()->standard(
+            'shli_filter',
+            $action,
+            [
+                'shortlink_filter' => $shortlink_input,
+                'url_filter' => $url_input
+            ],
+            [true, true],
+            true,
+            true
+        );
     }
-
-    public function getFilterShortLinkValue() : string
+    
+    public function populateWith(ilShortLinkCollection $shortlinkCollection) : void
     {
-        $txtinput_shortlink = $this->getFilterItemByPostVar('shortlink_filter');
-        if (is_null($txtinput_shortlink)) {
-            return '';
-        }
-        if (is_null($txtinput_shortlink->getValue())) {
-            return '';
-        }
-        return $txtinput_shortlink->getValue();
-    }
+        // Filter shortlinks
+        $filterData = $this->uiService->filter()->getData($this->filter);
+        $filterName = $filterData['shortlink_filter'];
+        $filterURL = $filterData['url_filter'];
+        $patternName = is_null($filterName) ? '' : $filterName;
+        $patternURL = is_null($filterURL) ? '' : $filterURL;
+        $shortlinks = $shortlinkCollection->getShortLinksByPattern($patternName, $patternURL);
 
-    public function getFilterUrlValue() : string
-    {
-        $txtinput_url = $this->getFilterItemByPostVar('url_filter');
-        if (is_null($txtinput_url)) {
-            return '';
-        }
-        if (is_null($txtinput_url->getValue())) {
-            return '';
-        }
-        return $txtinput_url->getValue();
-    }
-
-    public function populateWith(ilShortLinkArrayWrapper $shortlinks) : void
-    {
         // Build table data
         $data = array();
-
+        
         foreach ($shortlinks as $shortLink) {
             $row['id'] = $shortLink->getId();
             $row['title'] = $shortLink->getName();
@@ -118,41 +106,52 @@ class ilShortLinkTable extends ilTable2GUI
 
     public function addHtmlTo($tpl) : void
     {
-        $html = $this->getHTML();
-        $tpl->setContent($html);
+        $filter_html = $this->renderer->render($this->filter);
+        $table_html = $this->getHTML();
+        $tpl->setContent($filter_html . $table_html);
+    }
+    
+    public function getMyRender() : string
+    {
+        $filter_html = $this->renderer->render($this->filter);
+        $table_html = $this->getHTML();
+        return $filter_html . $table_html;
     }
 
     protected function fillRow($a_set)
     {
-        $this->ilCtrl->setParameterByClass(
-            get_class($this->getParentObject()),
-            'shliid',
-            $a_set['id']
+        // Set parameter
+        $this->ilCtrl->setParameterByClass(get_class($this->getParentObject()), 'shliid', $a_set['id']);
+        
+        $item = $this->ui->modal()->interruptiveItem($a_set['id'], $a_set['title'], null, $a_set['url']);
+
+        // Needed, but i dont know why.
+        // Cannot delete first table entry without creating+rendering a second modal.
+        $modalEmpty = $this->ui->modal()->interruptive('such empty', 'much empty', '');
+        
+        $modal = $this->ui->modal()->interruptive(
+            $this->shliPlugin->txt('gui_message_confirm_delete_title'),
+            $this->shliPlugin->txt('gui_message_confirm_delete'),
+            $this->ilCtrl->getLinkTargetByClass(get_class($this->getParentObject()), 'deleteModalShortLink')
+        )
+                ->withAffectedItems(array($item));
+
+        $editAction = $this->ilCtrl->getLinkTargetByClass(get_class($this->getParentObject()), 'displayShortLinkEditPage');
+
+        $items = array(
+            $this->ui->button()->shy($this->shliPlugin->txt("table_dropdown_edit"), $editAction),
+            $this->ui->divider()->horizontal(),
+            $this->ui->button()->shy($this->shliPlugin->txt("table_dropdown_delete"), $modal->getShowSignal())
         );
-
-        $actions = new ilAdvancedSelectionListGUI();
-        $actions->setId($a_set['id']);
-        $actions->setListTitle($this->shliPlugin->txt("table_dropdown_title"));
-
-        // Edit
-        $actions->addItem(
-            $this->shliPlugin->txt('table_dropdown_edit'),
-            '',
-            $this->ctrl->getLinkTargetByClass(get_class($this->getParentObject()), 'displayShortLinkEditPage')
-        );
-
-        // Delete
-        $actions->addItem(
-            $this->shliPlugin->txt('table_dropdown_delete'),
-            '',
-            $this->ctrl->getLinkTargetByClass(get_class($this->getParentObject()), 'confirmDeleteShortLink')
-        );
-
-        $this->ilCtrl->clearParameterByClass(get_class($this->getParentObject()), 'shliid');
-
+        
+        $dropDown = $this->ui->dropdown()->standard($items)->withLabel($this->shliPlugin->txt("table_dropdown_title"));
+        $dropDownHTML = $this->renderer->render([$modalEmpty, $modal, $dropDown]);
+        
         $this->tpl->setVariable('VAL_ID', $a_set['id']);
         $this->tpl->setVariable('OBJ_TITLE', $a_set['title']);
         $this->tpl->setVariable('OBJ_URL', $a_set['url']);
-        $this->tpl->setVariable('OBJ_ACTION', $actions->getHTML());
+        $this->tpl->setVariable('OBJ_ACTION', $dropDownHTML);
+
+        $this->ilCtrl->clearParameterByClass(get_class($this->getParentObject()), 'shliid');
     }
 }

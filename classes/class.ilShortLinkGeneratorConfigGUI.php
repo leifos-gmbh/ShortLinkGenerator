@@ -14,6 +14,7 @@
  * https://github.com/ILIAS-eLearning
  *
  *********************************************************************/
+declare(strict_types=1);
 
 /**
  *
@@ -21,51 +22,18 @@
  */
 class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
 {
-    /**
-     * @var ilLanguage
-     */
-    private $lng;
-
-    /**
-     * @var ilCtrl
-     */
-    private $ilCtrl;
-
-    /**
-     * @var ilTemplate
-     */
-    private $tpl;
-
-    /**
-     *
-     * @var ilTabs
-     */
-    private $ilTabs;
-
-    /**
-     *
-     * @var ilToolbar
-     */
-    private $ilToolbar;
-
-    /**
-     * @var ilLogger
-     */
-    private $logger;
-
-    /**
-     *
-     * @var ilShortlinkGeneratorPlugin
-     */
-    private $shliPlugin;
-
-    /**
-     *
-     * @var ilShortLinkCollection
-     */
-    private $shortLinkCollection;
-
-
+    private ilLanguage $lng;
+    private ilCtrl $ilCtrl;
+    private ilGlobalPageTemplate $tpl;
+    private ilTabsGUI $ilTabs;
+    private ilToolbarGUI $ilToolbar;
+    private ilShortLinkGeneratorPlugin $shliPlugin;
+    private ilShortLinkCollection $shortLinkCollection;
+    private \ILIAS\HTTP\GlobalHttpState $http;
+    private \ILIAS\UI\Implementation\Factory $ui;
+    private \ILIAS\UI\Implementation\DefaultRenderer $renderer;
+    private \ILIAS\Refinery\Factory $refinery;
+    
     public function __construct()
     {
         global $DIC;
@@ -74,18 +42,23 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $this->tpl = $DIC->ui()->mainTemplate();
         $this->ilTabs = $DIC->tabs();
         $this->ilToolbar = $DIC->toolbar();
-        $this->logger = ilLoggerFactory::getLogger('shli');
-        $this->shliPlugin = $this->getPluginObject();
-
+        $this->ui = $DIC->ui()->factory();
+        $this->renderer = $DIC->ui()->renderer();
+        $this->http = $DIC->http();
+        $this->refinery = $DIC->refinery();
+        
         // Manually initialize the plugin class if the plugin is deactivated.
-        if (is_null($this->shliPlugin)) {
+        if (is_null($this->getPluginObject())) {
             include_once 'class.ilShortLinkGeneratorPlugin.php';
             $this->shliPlugin = new ilShortLinkGeneratorPlugin();
+        } else {
+            $this->shliPlugin = $this->getPluginObject();
         }
+        
         $this->shortLinkCollection = new ilShortLinkDBCollection();
     }
 
-    private function buildTabs() : void
+    private function buildTableTabs() : void
     {
         $this->ilTabs->addTab(
             'configure',
@@ -95,316 +68,267 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $this->ilTabs->activateTab('configure');
     }
 
-    private function buildShortLinkTableForm() : void
+    private function buildEditorTabs() : void
+    {
+        $this->ilTabs->clearTargets();
+        $this->ilTabs->setBackTarget(
+            $this->shliPlugin->txt('gui_tab_back_editor'),
+            $this->ilCtrl->getLinkTargetByClass(get_class($this), 'displayShortLinkTablePage')
+        );
+    }
+    
+    private function buildShortLinkTableForm() : string
     {
         // Toolbar
-        $button = ilSubmitButton::getInstance();
-        $button->setCaption($this->shliPlugin->txt('gui_button_new_shortlink'), false);
-        $button->setCommand('displayShortLinkBuildPage');
+        $buttonAction = $this->ilCtrl->getLinkTargetByClass(get_class($this), 'displayShortLinkBuildPage');
+        ;
+        $button = $this->ui->button()->standard($this->shliPlugin->txt('gui_button_new_shortlink'), $buttonAction);
 
         $this->ilToolbar->setFormAction($this->ilCtrl->getFormAction($this));
-        $this->ilToolbar->addButtonInstance($button);
+        $this->ilToolbar->addComponent($button);
+        
+        $table = new ilShortLinkTable($this);
+        $table->populateWith($this->shortLinkCollection);
+        
+        return $table->getMyRender();
     }
-
-    private function buildShortLinkInputForm(bool $isEditMode) : ilPropertyFormGUI
+    
+    private function requestShliid() : int
     {
-        // Pass on shortlink id
+        return (int) $this->http->request()->getQueryParams()['shliid'];
+    }
+    
+    private function requestShliidArray() : array
+    {
+        return (array) $this->http->request()->getParsedBody()['shliids'];
+    }
+    
+    private function buildShortLinkInputForm(bool $isEditMode) : ILIAS\UI\Implementation\Component\Input\Container\Form\Standard
+    {
+        $validShortLink = $this->refinery->custom()->constraint(function ($v) {
+            $shortLink = new ilShortLink(-1, $v, '');
+            return $shortLink->isShortLinkNameValid();
+        }, $this->shliPlugin->txt('gui_error_shortlink_name_invalid'));
+
+        $shortLinkExists = $this->refinery->custom()->constraint(function ($v) {
+            return !$this->shortLinkCollection->containsShortLinkWithName($v);
+        }, $this->shliPlugin->txt('gui_error_another_shortlink_with_name_exists'));
+
+        $shortLinkExistsEditMode = $this->refinery->custom()->constraint(function ($v) {
+            $shliid = $this->requestShliid();
+            $shortLinkWithName = $this->shortLinkCollection->getShortLinkByName($v);
+            $newShortLink = $this->shortLinkCollection->getShortLinkById($shliid);
+            return is_null($shortLinkWithName) || $newShortLink->sharesIdWith($shortLinkWithName);
+        }, $this->shliPlugin->txt('gui_error_another_shortlink_with_name_exists'));
+        
+        $validURL = $this->refinery->custom()->constraint(function ($v) {
+            $shortLink = new ilShortLink(-1, '', $v);
+            return $shortLink->isURLValid();
+        }, $this->shliPlugin->txt('gui_error_shortlink_url_invalid'));
+    
+        $urlExists = $this->refinery->custom()->constraint(function ($v) {
+            return !$this->shortLinkCollection->containsShortLinkWithUrl($v);
+        }, $this->shliPlugin->txt('gui_error_another_shortlink_with_url_exists'));
+        
+        $urlExistsEditMode = $this->refinery->custom()->constraint(function ($v) {
+            $shliid = $this->requestShliid();
+            $shortLinkWithURL = $this->shortLinkCollection->getShortLinkByUrl($v);
+            $newShortLink = $this->shortLinkCollection->getShortLinkById($shliid);
+            return is_null($shortLinkWithURL) || $newShortLink->sharesIdWith($shortLinkWithURL);
+        }, $this->shliPlugin->txt('gui_error_another_shortlink_with_url_exists'));
+        
+        $outputFormatter = $this->refinery->custom()->transformation(function ($v) {
+            list(list($shortLinkName, $targetUrl)) = $v;
+            return new ilShortLink(-1, $shortLinkName, $targetUrl);
+        });
+        
+        $outputFormatterEditMode = $this->refinery->custom()->transformation(function ($v) {
+            $shliid = $this->requestShliid();
+            list(list($shortLinkName, $targetUrl)) = $v;
+            return new ilShortLink($shliid, $shortLinkName, $targetUrl);
+        });
+        
+        $shortlinkInput = null;
+        $urlInput = null;
+        $command = '';
+        $sectionTitle = '';
+        
         if ($isEditMode) {
-            $id = (int) $_GET['shliid'];
-            $this->ilCtrl->setParameterByClass(get_class($this), 'shliid', $id);
+            $command = 'updateShortLink';
+            $sectionTitle = $this->shliPlugin->txt('gui_title_edit_shortlink_page');
+            $infoPrefix = $this->shliPlugin->txt('gui_txtinputfield_info_oldvalue') . ' ';
+            $shliid = $this->requestShliid();
+            $this->ilCtrl->setParameterByClass(get_class($this), 'shliid', $shliid);
+            $shortLink = $this->shortLinkCollection->getShortLinkById($shliid);
+            
+            $shortlinkInput = $this->ui->input()->field()->text('shortlink', $infoPrefix . $shortLink->getName())
+                    ->withLabel($this->shliPlugin->txt('gui_txtinputfield_shortlink'))
+                    ->withAdditionalTransformation($shortLinkExistsEditMode)
+                    ->withAdditionalTransformation($validShortLink)
+                    ->withValue($shortLink->getName());
+            $urlInput = $this->ui->input()->field()->text('url', $infoPrefix . $shortLink->getTargetUrl())
+                    ->withLabel($this->shliPlugin->txt('gui_txtinputfield_url'))
+                    ->withAdditionalTransformation($urlExistsEditMode)
+                    ->withAdditionalTransformation($validURL)
+                    ->withValue($shortLink->getTargetUrl());
         }
-
-        $form = new ilPropertyFormGUI();
-        $form->setFormAction($this->ilCtrl->getFormAction($this));
-        $form->setTitle($this->shliPlugin->txt('gui_title_build_shortlink_page'));
-
-        $txtInputShortLink = new ilTextInputGUI($this->shliPlugin->txt('gui_txtinputfield_shortlink'), 'shortlink');
-        $txtInputShortLink->setRequired(true);
-        $txtInputShortLink->setMaxLength(40);
-        $form->addItem($txtInputShortLink);
-
-        $txtInputTargetUrl = new ilTextInputGUI($this->shliPlugin->txt('gui_txtinputfield_url'), 'targeturl');
-        $txtInputTargetUrl->setRequired(true);
-        $txtInputTargetUrl->setMaxLength(300);
-        $form->addItem($txtInputTargetUrl);
-
-        // Edit button
-        if ($isEditMode) {
-            $form->addCommandButton('saveEditedShortLink', $this->shliPlugin->txt('gui_button_save_changes'));
-        }
-        // Save Button
         if (!$isEditMode) {
-            $form->addCommandButton('saveShortLink', $this->shliPlugin->txt('gui_button_save'));
+            $command = 'saveShortLink';
+            $sectionTitle = $this->shliPlugin->txt('gui_title_build_shortlink_page');
+            $shortlinkInput = $this->ui->input()->field()->text(
+                'shortlink',
+                $this->shliPlugin->txt('gui_txtinputfield_shortlink_info_create')
+            )
+                    ->withLabel($this->shliPlugin->txt('gui_txtinputfield_shortlink'))
+                    ->withAdditionalTransformation($shortLinkExists)
+                    ->withAdditionalTransformation($validShortLink);
+            $urlInput = $this->ui->input()->field()->text('url')
+                    ->withLabel($this->shliPlugin->txt('gui_txtinputfield_url'))
+                    ->withAdditionalTransformation($urlExists)
+                    ->withAdditionalTransformation($validURL);
         }
-        $form->addCommandButton('displayShortLinkTablePage', $this->lng->txt('cancel'));
-
-        // Clear shortlink id parameter
+        
+        $section = $this->ui->input()->field()->section(
+            [$shortlinkInput, $urlInput],
+            $sectionTitle
+        );
+        $formAction = $this->ilCtrl->getLinkTargetByClass(get_class($this), $command);
+        $form = $this->ui->input()->container()->form()->standard($formAction, [$section]);
+        
         if ($isEditMode) {
-            $this->ilCtrl->clearParameterByClass(get_class($this), 'shliid');
+            $form = $form->withAdditionalTransformation($outputFormatterEditMode);
+        } else {
+            $form = $form->withAdditionalTransformation($outputFormatter);
         }
-
+        
         return $form;
     }
-
-    private function populateTable(ilShortLinkTable $table) : void
+    
+    private function displayShortLinkBuildPage(?\ILIAS\UI\Component\MessageBox\MessageBox $msgBox = null) : void
     {
-        $patternName = '/' . $table->getFilterShortLinkValue() . '/';
-        $patternUrl = '/' . $table->getFilterUrlValue() . '/';
-        $patternName = strcmp($patternName, '//') == 0 ? '/.*/' : $patternName;
-        $patternUrl = strcmp($patternUrl, '//') == 0 ? '/.*/' : $patternUrl;
-        $shortlinks = $this->shortLinkCollection->getShortLinksByPattern($patternName, $patternUrl);
-        $table->populateWith($shortlinks);
-    }
-
-    private function displayShortLinkBuildPage() : void
-    {
+        $this->buildEditorTabs();
         $form = $this->buildShortLinkInputForm(false);
-        $this->tpl->setContent($form->getHTML());
+        $formHTML = $this->renderer->render($form);
+        $msgBoxHTML = is_null($msgBox) ? '' : $this->renderer->render($msgBox);
+        $this->tpl->setContent($msgBoxHTML . $formHTML);
     }
-
-    private function displayShortLinkTablePage() : void
+    
+    private function displayShortLinkEditPage(?\ILIAS\UI\Component\MessageBox\MessageBox $msgBox = null) : void
     {
-        $this->buildShortLinkTableForm();
-        $table = new ilShortLinkTable($this);
-        $this->populateTable($table);
-        $table->addHtmlTo($this->tpl);
-    }
-
-    private function displayShortLinkEditPage() : void
-    {
-        $id = (int) $_GET['shliid'];
+        $this->buildEditorTabs();
         $form = $this->buildShortLinkInputForm(true);
-
-        // Fill form
-        $shortLink = $this->shortLinkCollection->getShortLinkById($id);
-        $txtInputShortLink = $form->getItemByPostVar('shortlink');
-        $txtInputShortLink->setValue($shortLink->getName());
-        $txtInputTargetUrl = $form->getItemByPostVar('targeturl');
-        $txtInputTargetUrl->setValue($shortLink->getTargetUrl());
-
-        $this->tpl->setContent($form->getHTML());
+        $formHTML = $this->renderer->render($form);
+        $msgBoxHTML = is_null($msgBox) ? '' : $this->renderer->render($msgBox);
+        $this->tpl->setContent($msgBoxHTML . $formHTML);
+    }
+    
+    private function displayShortLinkTablePage(?\ILIAS\UI\Component\MessageBox\MessageBox $msgBox = null) : void
+    {
+        $this->buildTableTabs();
+        $tableHTML = $this->buildShortLinkTableForm();
+        $msgBoxHTML = is_null($msgBox) ? '' : $this->renderer->render($msgBox);
+        $this->tpl->setContent($msgBoxHTML . $tableHTML);
     }
 
     private function saveShortLink() : void
     {
-        $form = $this->buildShortLinkInputForm(false);
+        $request = $this->http->request();
+        $form = $this->buildShortLinkInputForm(false)->withRequest($request);
+        $shortLink = $form->getData();
+        $msgBoxSuccess = $this->ui->messageBox()->success($this->shliPlugin->txt('gui_message_success_shortlink_saved'));
+        $msgBoxFailure = $this->ui->messageBox()->failure($this->shliPlugin->txt('gui_message_failed_shortlink_saved'));
 
-        if ($this->checkUserInput($form)) { // Input validation succeeded
-            // Add new shortlink
-            $slName = $form->getInput('shortlink');
-            $slUrl = $form->getInput('targeturl');
-            $this->shortLinkCollection->createShortLink($slName, $slUrl);
-
-            ilUtil::sendSuccess($this->lng->txt('settings_saved'), true);
-            $this->ilCtrl->redirect($this, 'displayShortLinkTablePage');
-        } else { // Input validation failed
-            // Restore Input
-            $form->setValuesByPost();
-            $this->tpl->setContent($form->getHTML());
-
-            ilUtil::sendFailure($this->lng->txt('err_check_input'), true);
+        if (!is_null($shortLink)) {
+            $this->shortLinkCollection->createShortLink($shortLink->getName(), $shortLink->getTargetURL());
+            $this->displayShortLinkTablePage($msgBoxSuccess);
+        } else {
+            $this->buildEditorTabs();
+            $formHTML = $this->renderer->render([$msgBoxFailure, $form]);
+            $this->tpl->setContent($formHTML);
         }
     }
 
-    private function saveEditedShortLink() : void
+    private function updateShortLink() : void
     {
-        $form = $this->buildShortLinkInputForm(true);
-
-        if ($this->checkUserInputEditShortLink($form)) { // Input validation succeeded
-            // Update shortlink
-            $id = (int) $_GET['shliid'];
-            $slName = $form->getInput('shortlink');
-            $slUrl = $form->getInput('targeturl');
-            $replacement = new ilShortLink($id, $slName, $slUrl);
-            $this->shortLinkCollection->updateShortLink($replacement);
-
-            ilUtil::sendSuccess($this->lng->txt('settings_saved'), true);
-            $this->ilCtrl->redirect($this, 'displayShortLinkTablePage');
-        } else { // Input validation failed
-            // Restore Input
-            $form->setValuesByPost();
-            $this->tpl->setContent($form->getHTML());
-
-            ilUtil::sendFailure($this->lng->txt('err_check_input'), true);
+        $shliid = $this->requestShliid();
+        $request = $this->http->request();
+        $form = $this->buildShortLinkInputForm(true)->withRequest($request);
+        $shortLinkNew = $form->getData();
+        $shortLinkOld = $this->shortLinkCollection->getShortLinkById($shliid);
+        $msgBoxSuccess = $this->ui->messageBox()->success($this->shliPlugin->txt('gui_message_success_shortlink_saved'));
+        $msgBoxFailure = $this->ui->messageBox()->failure($this->shliPlugin->txt('gui_message_failed_shortlink_saved'));
+        
+        if (is_null($shortLinkNew)) {
+            // Input invalid.
+            $this->buildEditorTabs();
+            $formHTML = $this->renderer->render([$msgBoxFailure, $form]);
+            $this->tpl->setContent($msgBoxHTML . $formHTML);
+            return;
         }
-    }
-
-    private function checkUserInput(ilPropertyFormGUI $form) : bool
-    {
-        $inputValid = true;
-
-        if (!$form->checkInput()) {
-            $inputValid = false;
+        
+        if (!($shortLinkOld->sharesNameWith($shortLinkNew) && $shortLinkOld->sharesUrlWith($shortLinkNew))) {
+            $this->shortLinkCollection->updateShortLink($shortLinkNew);
         }
-
-        $slName = $form->getInput('shortlink');
-        $slUrl = $form->getInput('targeturl');
-        $shortLink = new ilShortLink(-1, $slName, $slUrl);
-        $txtInputShortLink = $form->getItemByPostVar('shortlink');
-        $txtInputTargetUrl = $form->getItemByPostVar('targeturl');
-
-        if (!$shortLink->isShortLinkNameValid()) {
-            $txtInputShortLink->setAlert($txtInputShortLink->getAlert()
-                    . '<br>'
-                    . $this->shliPlugin->txt('gui_error_shortlink_name_invalid'));
-            $inputValid = false;
-        }
-
-        if (!$shortLink->isURLValid()) {
-            $txtInputTargetUrl->setAlert($txtInputTargetUrl->getAlert()
-                    . '<br>'
-                    . $this->shliPlugin->txt('gui_error_shortlink_url_invalid'));
-            $inputValid = false;
-        }
-
-        if ($this->shortLinkCollection->containsShortLinkWithName($slName)) {
-            $txtInputShortLink->setAlert($txtInputShortLink->getAlert()
-                    . '<br>'
-                    . $this->shliPlugin->txt('gui_error_another_shortlink_with_name_exists'));
-            $inputValid = false;
-        }
-
-        if ($this->shortLinkCollection->containsShortLinkWithUrl($slUrl)) {
-            $txtInputTargetUrl->setAlert($txtInputTargetUrl->getAlert()
-                    . '<br>'
-                    . $this->shliPlugin->txt('gui_error_another_shortlink_with_url_exists'));
-            $inputValid = false;
-        }
-
-        return $inputValid;
-    }
-
-    private function checkUserInputEditShortLink(ilPropertyFormGUI $form) : bool
-    {
-        $inputValid = true;
-
-        if (!$form->checkInput()) {
-            $inputValid = false;
-        }
-
-        $id = (int) $_GET['shliid'];
-        $slName = $form->getInput('shortlink');
-        $slUrl = $form->getInput('targeturl');
-        $shortLinkUpdated = new ilShortLink($id, $slName, $slUrl);
-        $shortLinkWithName = $this->shortLinkCollection->getShortLinkByName($slName);
-        $shortLinkWithUrl = $this->shortLinkCollection->getShortLinkByUrl($slUrl);
-        $txtInputShortLink = $form->getItemByPostVar('shortlink');
-        $txtInputTargetUrl = $form->getItemByPostVar('targeturl');
-
-        if (!$shortLinkUpdated->isShortLinkNameValid()) {
-            $txtInputShortLink->setAlert($txtInputShortLink->getAlert()
-                    . '<br>'
-                    . $this->shliPlugin->txt('gui_error_shortlink_name_invalid'));
-            $inputValid = false;
-        }
-
-        if (!$shortLinkUpdated->isURLValid()) {
-            $txtInputTargetUrl->setAlert($txtInputTargetUrl->getAlert()
-                    . '<br>'
-                    . $this->shliPlugin->txt('gui_error_shortlink_url_invalid'));
-            $inputValid = false;
-        }
-
-        if (!is_null($shortLinkWithName) && !$shortLinkWithName->sharesIdWith($shortLinkUpdated)) {
-            $txtInputShortLink->setAlert($txtInputShortLink->getAlert()
-                    . '<br>'
-                    . $this->shliPlugin->txt('gui_error_another_shortlink_with_name_exists'));
-            $inputValid = false;
-        }
-
-        if (!is_null($shortLinkWithUrl) && !$shortLinkWithUrl->sharesIdWith($shortLinkUpdated)) {
-            $txtInputTargetUrl->setAlert($txtInputTargetUrl->getAlert()
-                    . '<br>'
-                    . $this->shliPlugin->txt('gui_error_another_shortlink_with_url_exists'));
-            $inputValid = false;
-        }
-
-        if (!is_null($shortLinkWithName) && !is_null($shortLinkWithUrl)
-                && $shortLinkWithUrl->sharesIdWith($shortLinkUpdated)
-                && $shortLinkWithName->sharesIdWith($shortLinkUpdated)) {
-            $txtInputShortLink->setAlert($txtInputShortLink->getAlert()
-                    . '<br>'
-                    . $this->shliPlugin->txt('gui_error_no_changes_made_in_editor'));
-            $txtInputTargetUrl->setAlert($txtInputTargetUrl->getAlert()
-                    . '<br>'
-                    . $this->shliPlugin->txt('gui_error_no_changes_made_in_editor'));
-            $inputValid = false;
-        }
-
-        return $inputValid;
-    }
-
-    private function confirmDeleteShortLink() : void
-    {
-        $id = (int) $_GET['shliid'];
-        $shortLink = $this->shortLinkCollection->getShortLinkById($id);
-
-        $confirm = new ilConfirmationGUI();
-        $confirm->setFormAction($this->ilCtrl->getFormAction($this));
-        $confirm->setConfirm($this->lng->txt('delete'), 'deleteSelected');
-        $confirm->setCancel($this->lng->txt('cancel'), 'displayShortLinkTablePage');
-        $confirm->addItem('shliids[]', $shortLink->getId(), $shortLink->getName());
-
-        ilUtil::sendQuestion($this->shliPlugin->txt('gui_message_confirm_delete'));
-        $this->tpl->setContent($confirm->getHTML());
+        
+        $this->displayShortLinkTablePage($msgBoxSuccess);
     }
 
     private function confirmDeleteSelected() : void
     {
-        if (!$_REQUEST['shliids']) {
-            ilUtil::sendFailure($this->shliPlugin->txt('gui_error_select_one'), true);
-            $this->ilCtrl->redirect($this, 'displayShortLinkTablePage');
-            return;
+        $shortlinkIDs = $this->requestShliidArray();
+        $msgBoxQuestion = $this->ui->messageBox()->confirmation($this->shliPlugin->txt('gui_message_confirm_delete_multiple'));
+        $msgBoxFailure = $this->ui->messageBox()->failure($this->shliPlugin->txt('gui_error_select_one'));
+        
+        if (count($shortlinkIDs) == 0) {
+            $this->displayShortLinkTablePage($msgBoxFailure);
+        } else {
+            $confirm = new ilConfirmationGUI();
+            $confirm->setFormAction($this->ilCtrl->getFormAction($this));
+            $confirm->setConfirm($this->lng->txt('delete'), 'deleteSelected');
+            $confirm->setCancel($this->lng->txt('cancel'), 'displayShortLinkTablePage');
+            
+            foreach ($shortlinkIDs as $id) {
+                $shortLink = $this->shortLinkCollection->getShortLinkById((int) $id);
+                $confirm->addItem('shliids[]', $id, $shortLink->getName());
+            }
+            
+            $msgBoxHTML = $this->renderer->render($msgBoxQuestion);
+            $this->tpl->setContent($msgBoxHTML . $confirm->getHTML());
         }
-
-        $confirm = new ilConfirmationGUI();
-        $confirm->setFormAction($this->ilCtrl->getFormAction($this));
-        $confirm->setConfirm($this->lng->txt('delete'), 'deleteSelected');
-        $confirm->setCancel($this->lng->txt('cancel'), 'displayShortLinkTablePage');
-
-        foreach ((array) $_REQUEST['shliids'] as $id) {
-            $shortLink = $this->shortLinkCollection->getShortLinkById((int) $id);
-            $confirm->addItem('shliids[]', $id, $shortLink->getName());
-        }
-
-        ilUtil::sendQuestion($this->shliPlugin->txt('gui_message_confirm_delete_multiple'));
-        $this->tpl->setContent($confirm->getHTML());
     }
 
+    private function deleteModalShortLink() : void
+    {
+        $shliid = $this->requestShliid();
+        $msgBoxSuccess = $this->ui->messageBox()->success($this->shliPlugin->txt('gui_message_shortlink_deleted'));
+        $msgBoxFailure = $this->ui->messageBox()->failure($this->shliPlugin->txt('gui_error_delete_not_possible'));
+        
+        if ($this->shortLinkCollection->containsShortLinkWithId($shliid)) {
+            $this->shortLinkCollection->removeShortLinkById($shliid);
+            $this->displayShortLinkTablePage($msgBoxSuccess);
+        } else {
+            $this->displayShortLinkTablePage($msgBoxFailure);
+        }
+    }
+    
     private function deleteSelected() : void
     {
-        if (!$_POST['shliids']) {
-            ilUtil::sendFailure($this->shliPlugin->txt('gui_error_delete_not_possible'), true);
-            $this->ilCtrl->redirect($this, 'displayShortLinkTablePage');
-            return;
+        $shortLinkIDs = $this->requestShliidArray();
+        $msgBoxSuccess = $this->ui->messageBox()->success($this->shliPlugin->txt('gui_message_shortlink_deleted'));
+        $msgBoxFailure = $this->ui->messageBox()->failure($this->shliPlugin->txt('gui_error_delete_not_possible'));
+        
+        if (count($shortLinkIDs) == 0) {
+            $this->displayShortLinkTablePage($msgBoxFailure);
         }
-
-        foreach ((array) $_POST['shliids'] as $shliid) {
-            $this->shortLinkCollection->removeShortLinkById($shliid);
+        foreach ($shortLinkIDs as $shliid) {
+            $this->shortLinkCollection->removeShortLinkById((int) $shliid);
+            $this->displayShortLinkTablePage($msgBoxSuccess);
         }
-
-        ilUtil::sendSuccess($this->shliPlugin->txt('gui_message_shortlink_deleted'), true);
-        $this->ilCtrl->redirect($this, 'displayShortLinkTablePage');
     }
-
-    private function applyFilter() : void
+    
+    private function filter() : void
     {
-        $this->buildShortLinkTableForm();
-        $table = new ilShortLinkTable($this);
-        $table->writeFilterToSession();
-        $table->resetOffset();
-        $this->populateTable($table);
-        $table->addHtmlTo($this->tpl);
-    }
-
-    private function resetFilter() : void
-    {
-        $this->buildShortLinkTableForm();
-        $table = new ilShortLinkTable($this);
-        $table->resetFilter();
-        $table->resetOffset();
-        $this->populateTable($table);
-        $table->addHtmlTo($this->tpl);
+        $this->displayShortLinkTablePage();
     }
 
     private function configure() : void
@@ -414,19 +338,17 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
 
     public function performCommand($cmd) : void
     {
-        $this->buildTabs();
         switch ($cmd) {
             case 'displayShortLinkEditPage':
             case 'displayShortLinkBuildPage':
-            case 'saveEditedShortLink':
+            case 'updateShortLink':
             case 'saveShortLink':
             case 'configure':
             case 'displayShortLinkTablePage':
-            case 'confirmDeleteShortLink':
             case 'confirmDeleteSelected':
             case 'deleteSelected':
-            case 'applyFilter':
-            case 'resetFilter':
+            case 'deleteModalShortLink':
+            case 'filter':
                 $this->$cmd();
                 break;
             default:

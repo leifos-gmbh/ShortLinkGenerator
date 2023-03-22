@@ -18,7 +18,7 @@ directory, or Apache-Config, at the end of the section 'IfModule mod_rewrite.c':
 
 ```apacheconf
     RewriteEngine On # <-- Only needed if the rewrite engine is not already enabled.
-    RewriteCond %{REQUEST_URI} /([a-z]|[A-Z])([A-Z]|[a-z]|[0-9])+$
+    RewriteCond %{REQUEST_URI} /([A-Z]|[a-z]|[0-9]|_|-)+$
     RewriteRule ^(.*)$ /Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
 ```
 
@@ -27,7 +27,7 @@ If the 'IfModule mod_rewrite.c' section does not exist, instead add:
 ```apacheconf
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteCond %{REQUEST_URI} /([a-z]|[A-Z])([A-Z]|[a-z]|[0-9])+$
+    RewriteCond %{REQUEST_URI} /([A-Z]|[a-z]|[0-9]|_|-)+$
     RewriteRule ^(.*)$ /Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
 </IfModule>
 ```

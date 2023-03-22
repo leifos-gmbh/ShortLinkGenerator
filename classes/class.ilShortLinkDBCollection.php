@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * This file is part of ILIAS, a powerful learning management system
  * published by ILIAS open source e-Learning e.V.
@@ -21,17 +22,8 @@
  */
 class ilShortLinkDBCollection implements ilShortLinkCollection
 {
-    /**
-     *
-     * @var SplDoublyLinkedList
-     */
-    private $shortLinks;
-
-    /**
-     *
-     * @var ilDBInterface
-     */
-    private $ilDB;
+    private SplDoublyLinkedList $shortLinks;
+    private ilDBInterface $ilDB;
 
     public function __construct()
     {
@@ -59,7 +51,7 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
     private function saveShortLinkToDB(ilShortLink $shortLink) : int
     {
         $dateTimeImm = new DateTimeImmutable('now', new DateTimeZone('Utc'));
-        $id = $this->ilDB->nextId('uico_uihk_shli_items');
+        $id = (int) $this->ilDB->nextId('uico_uihk_shli_items');
         $values = array(
             'id' => array('integer', $id),
             'title' => array('text', $shortLink->getName()),
@@ -117,6 +109,38 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
         $this->shortLinks->offsetSet($index2, $tmp1);
     }
 
+    private function removeShortLinkFromCollection($shortLink) : ?ilShortLink
+    {
+        $lastIndex = $this->shortLinks->count() - 1;
+        $index = -1;
+
+        if ($lastIndex === -1) { // Zero elements in DB.
+            return null;
+        }
+
+        $this->shortLinks->rewind();
+        for (;$this->shortLinks->valid(); $this->shortLinks->next()) {
+            $currentShortLink = $this->shortLinks->current();
+            if ($shortLink->sharesAPropertyWith($currentShortLink)) {
+                $index = $this->shortLinks->key();
+                break;
+            }
+        }
+
+        if ($index === -1) {
+            return null;
+        }
+
+        try {
+            $this->swapElements($index, $lastIndex);
+            return $this->shortLinks->pop();
+        } catch (OutOfBoundsException $e) {
+            return false;
+        }
+        
+        return null;
+    }
+    
     public function createShortLink(string $slName, string $slUrl) : ?ilShortLink
     {
         $dummyShortLink = new ilShortLink(-1, $slName, $slUrl);
@@ -129,8 +153,9 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
         }
 
         $id = $this->saveShortLinkToDB($dummyShortLink);
-
-        return new ilShortLink($id, $slName, $slUrl);
+        $newShortLink = new ilShortLink($id, $slName, $slUrl);
+        $this->shortLinks->push($newShortLink);
+        return $newShortLink;
     }
 
     public function updateShortLink(ilShortLink $replacement) : bool
@@ -142,7 +167,9 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
             return false;
         }
 
+        $this->removeShortLinkFromCollection($replacement);
         $this->updateShortLinkInDB($replacement);
+        $this->shortLinks->push($replacement);
 
         return true;
     }
@@ -185,33 +212,11 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
 
     public function removeShortLink(ilShortLink $shortLink) : bool
     {
-        $lastIndex = $this->shortLinks->count() - 1;
-        $index = -1;
-
-        if ($lastIndex === -1) { // Zero elements in DB.
+        $removedShortLink = $this->removeShortLinkFromCollection($shortLink);
+        if (is_null($removedShortLink)) {
             return false;
         }
-
-        $this->shortLinks->rewind();
-        for (;$this->shortLinks->valid(); $this->shortLinks->next()) {
-            $currentShortLink = $this->shortLinks->current();
-            if ($shortLink->sharesAPropertyWith($currentShortLink)) {
-                $index = $this->shortLinks->key();
-                break;
-            }
-        }
-
-        if ($index === -1) {
-            return false;
-        }
-
-        try {
-            $this->swapElements($index, $lastIndex);
-            $this->remShortLinkFromDB($this->shortLinks->pop());
-        } catch (OutOfBoundsException $e) {
-            return false;
-        }
-
+        $this->remShortLinkFromDB($removedShortLink);
         return true;
     }
 
@@ -270,8 +275,15 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
         $this->shortLinks->rewind();
         for (;$this->shortLinks->valid(); $this->shortLinks->next()) {
             $currentShortLink = $this->shortLinks->current();
-            if (preg_match($patternName, $currentShortLink->getName())
-                    && preg_match($patternURL, $currentShortLink->getTargetUrl())) {
+            $patternNameLowerCase = strtolower(trim($patternName));
+            $nameLowerCase = strtolower($currentShortLink->getName());
+            
+            $containsName = strlen($patternName) == 0
+                    || str_contains($nameLowerCase, $patternNameLowerCase);
+            $containsUrl = strlen($patternURL) == 0
+                    || str_contains($currentShortLink->getTargetUrl(), trim($patternURL));
+            
+            if ($containsName && $containsUrl) {
                 $shortlinks->add($currentShortLink);
             }
         }

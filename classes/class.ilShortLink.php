@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * This file is part of ILIAS, a powerful learning management system
  * published by ILIAS open source e-Learning e.V.
@@ -21,29 +22,10 @@
  */
 class ilShortLink
 {
-    /**
-     *
-     * @var integer
-     */
-    private $id;
-
-    /**
-     *
-     * @var string
-     */
-    private $shortLink;
-
-    /**
-     *
-     * @var string
-     */
-    private $url;
-
-    /**
-     *
-     * @var DateTimeImmutable
-     */
-    private $lastEdited;
+    private int $id;
+    private string $shortLink;
+    private string $url;
+    private ?DateTimeImmutable $lastEdited;
 
     public function __construct(int $id, string $shortLink, string $url, ?DateTimeImmutable $lastEdited = null)
     {
@@ -75,7 +57,6 @@ class ilShortLink
                 $this->sharesUrlWith($other);
     }
 
-
     public function toString() : string
     {
         return 'id:' . $this->id .
@@ -85,13 +66,15 @@ class ilShortLink
 
     public function isShortLinkNameValid() : bool
     {
-        $shortLinkPattern = '/^([a-z]|[A-Z])([a-z]|[A-Z]|[0-9])+$/i';
-        return preg_match($shortLinkPattern, $this->shortLink);
+        $shortLinkPattern = '/^([a-z]|[A-Z]|[0-9]|_|-)+$/i';
+        // preg_match returns 1 if a match occurs
+        return preg_match($shortLinkPattern, $this->shortLink) == 1;
     }
 
     public function isURLValid() : bool
     {
-        return filter_var($this->url, FILTER_VALIDATE_URL);
+        // filter_var returns the filtered values or false if no match.
+        return filter_var($this->url, FILTER_VALIDATE_URL) != false;
     }
 
     public function validate() : bool

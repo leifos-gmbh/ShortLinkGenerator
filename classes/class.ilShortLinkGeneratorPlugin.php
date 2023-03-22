@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * This file is part of ILIAS, a powerful learning management system
  * published by ILIAS open source e-Learning e.V.
@@ -21,17 +22,7 @@
  */
 class ilShortLinkGeneratorPlugin extends ilUserInterfaceHookPlugin
 {
-    /**
-     *
-     * @var string
-     */
-    public const PNAME = 'ShortLinkGenerator';
-
-    /**
-     *
-     * @var type ilDBInterface
-     */
-    private $ilDB;
+    private ilDBInterface $ilDB;
 
     public function __construct()
     {
@@ -39,12 +30,7 @@ class ilShortLinkGeneratorPlugin extends ilUserInterfaceHookPlugin
         global $DIC;
 
         $this->ilDB = $DIC->database();
-
-        $this->includeClass('../interfaces/interface.ilShortLinkCollection.php');
-        $this->includeClass('class.ilShortLinkArrayWrapper.php');
-        $this->includeClass('class.ilShortLinkTable.php');
-        $this->includeClass('class.ilShortLink.php');
-        $this->includeClass('class.ilShortLinkDBCollection.php');
+        $this->initAutoLoad();
     }
 
     final private function classFileOf($a_classname) : string
@@ -54,10 +40,13 @@ class ilShortLinkGeneratorPlugin extends ilUserInterfaceHookPlugin
 
     final private function interfaceFileOf($a_classname) : string
     {
-        return $this->getClassesDirectory() . '../interfaces/interface.' . $a_classname . '.php';
+        return $this->getClassesDirectory() . '/../interfaces/interface.' . $a_classname . '.php';
     }
 
-
+    protected function init()
+    {
+        $this->initAutoLoad();
+    }
     /**
      * Auto load implementation.
      * @param string class name
@@ -100,6 +89,6 @@ class ilShortLinkGeneratorPlugin extends ilUserInterfaceHookPlugin
 
     public function getPluginName() : string
     {
-        return self::PNAME;
+        return 'ShortLinkGenerator';
     }
 }
