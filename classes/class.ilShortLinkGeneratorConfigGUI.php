@@ -134,6 +134,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         }
         // Save Button
         if (!$isEditMode) {
+            $txtInputShortLink->setInfo($this->shliPlugin->txt('gui_txtinputfield_shortlink_info_create'));
             $form->addCommandButton('saveShortLink', $this->shliPlugin->txt('gui_button_save'));
         }
         $form->addCommandButton('displayShortLinkTablePage', $this->lng->txt('cancel'));
@@ -148,10 +149,8 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
 
     private function populateTable(ilShortLinkTable $table) : void
     {
-        $patternName = '/' . $table->getFilterShortLinkValue() . '/';
-        $patternUrl = '/' . $table->getFilterUrlValue() . '/';
-        $patternName = strcmp($patternName, '//') == 0 ? '/.*/' : $patternName;
-        $patternUrl = strcmp($patternUrl, '//') == 0 ? '/.*/' : $patternUrl;
+        $patternName = $table->getFilterShortLinkValue();
+        $patternUrl = $table->getFilterUrlValue();
         $shortlinks = $this->shortLinkCollection->getShortLinksByPattern($patternName, $patternUrl);
         $table->populateWith($shortlinks);
     }

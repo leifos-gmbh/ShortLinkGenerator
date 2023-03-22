@@ -270,8 +270,16 @@ class ilShortLinkDBCollection implements ilShortLinkCollection
         $this->shortLinks->rewind();
         for (;$this->shortLinks->valid(); $this->shortLinks->next()) {
             $currentShortLink = $this->shortLinks->current();
-            if (preg_match($patternName, $currentShortLink->getName())
-                    && preg_match($patternURL, $currentShortLink->getTargetUrl())) {
+            $patternNameLowerCase = strtolower(trim($patternName));
+            $nameLowerCase = strtolower($currentShortLink->getName());
+            
+            $containsName = strlen($patternName) == 0
+                    || str_contains($nameLowerCase, $patternNameLowerCase);
+            
+            $containsUrl = strlen($patternURL) == 0
+                    || str_contains($currentShortLink->getTargetUrl(), trim($patternURL));
+            
+            if ($containsName && $containsUrl) {
                 $shortlinks->add($currentShortLink);
             }
         }
