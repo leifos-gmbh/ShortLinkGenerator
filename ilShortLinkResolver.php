@@ -26,7 +26,9 @@ require_once("Services/Init/classes/class.ilInitialisation.php");
 ilInitialisation::initILIAS();
 
 $uri = $_SERVER['REQUEST_URI'];
-$shortLinkName = end(explode('/', $uri));
+$uriParts = explode('/', $uri);
+$shortLinkName = end($uriParts);
+
 
 try {
     // includes short link classes if plugin is not active.
