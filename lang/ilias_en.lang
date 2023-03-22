@@ -14,10 +14,10 @@ gui_error_another_shortlink_with_name_exists#:#Shortlink this name already exist
 gui_error_delete_not_possible#:#Could not delete the selected shortlinks.
 gui_error_select_one#:#Selected at least one element.
 gui_error_shortlink_url_invalid#:#Invalid Url
-gui_error_shortlink_name_invalid#:#Invalid title. Required length of 1. May contain only numbers, letters and '-', '_'.
+gui_error_shortlink_name_invalid#:#Invalid title. May contain only numbers, letters and '-', '_'.
 gui_error_no_changes_made_in_editor#:#No changes were made.
 gui_txtinputfield_shortlink#:#Title
-gui_txtinputfield_shortlink_info_create#:#Required length of 1. May contain only numbers, letters and '-', '_'.
+gui_txtinputfield_shortlink_info_create#:#May contain only numbers, letters and '-', '_'.
 gui_txtinputfield_url#:#Target URL
 table_col_title#:#Title
 table_col_targeturl#:#Target URL
