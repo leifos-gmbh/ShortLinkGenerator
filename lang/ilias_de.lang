@@ -14,10 +14,10 @@ gui_error_another_shortlink_with_name_exists#:#Shortlink mit demselben Namen exi
 gui_error_delete_not_possible#:#Die ausgewählten shortlinks konnten nicht gelöschen werden.
 gui_error_select_one#:#Es muss mindestens ein Element ausgewählt werden.
 gui_error_shortlink_url_invalid#:#Ungültige Url
-gui_error_shortlink_name_invalid#:#Ungültiger Titel. Mindestlänge von 1. Darf nur aus Buchstaben, Zahlen und den Sonderzeichen [-,_] bestehen.
+gui_error_shortlink_name_invalid#:#Ungültiger Titel. Mindestlänge von 1. Darf nur aus Buchstaben, Zahlen und den Sonderzeichen '-' und '_' bestehen.
 gui_error_no_changes_made_in_editor#:#Es wurden keine Änderungen vorgenommen.
 gui_txtinputfield_shortlink#:#Titel
-gui_txtinputfield_shortlink_info_create#:#Mindestlänge von 1. Darf nur aus Buchstaben, Zahlen und den Sonderzeichen [-,_] bestehen.
+gui_txtinputfield_shortlink_info_create#:#Mindestlänge von 1. Darf nur aus Buchstaben, Zahlen und den Sonderzeichen '-' und '_' bestehen.
 gui_txtinputfield_url#:#Ziel URL
 table_col_title#:#Titel
 table_col_targeturl#:#Ziel URL
