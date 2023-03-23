@@ -16,6 +16,11 @@ declare(strict_types=1);
  *
  *********************************************************************/
 
+use \ILIAS\UI\Implementation\Factory;
+use \ILIAS\UI\Implementation\DefaultRenderer;
+use \ILIAS\UI\Component\Input\Container\Filter\Standard;
+use \ILIAS\HTTP\GlobalHttpState;
+
 /**
  *
  * @author Christoph Ludolf
@@ -24,11 +29,11 @@ class ilShortLinkTable extends ilTable2GUI
 {
     private ilCtrl $ilCtrl;
     private ilShortLinkGeneratorPlugin $shliPlugin;
-    private \ILIAS\UI\Implementation\Factory $ui;
-    private \ILIAS\UI\Implementation\DefaultRenderer $renderer;
+    private Factory $ui;
+    private DefaultRenderer $renderer;
     private ilUIService $uiService;
-    private \ILIAS\UI\Component\Input\Container\Filter\Standard $filter;
-    private \ILIAS\HTTP\GlobalHttpState $http;
+    private Standard $filter;
+    private GlobalHttpState $http;
     
     public function __construct($a_parent_obj, $a_parent_cmd = "", $a_template_context = "")
     {
@@ -42,7 +47,7 @@ class ilShortLinkTable extends ilTable2GUI
         $this->renderer = $DIC->ui()->renderer();
         $this->http = $DIC->http();
         
-        $this->shliPlugin = new ilShortLinkGeneratorPlugin();
+        $this->shliPlugin = ilShortLinkGeneratorPlugin::getInstance();
 
         $this->addColumn('', 'checkboxes', '1px');
         $this->addColumn($this->shliPlugin->txt('table_col_title'), 'title', '20%');
@@ -52,7 +57,7 @@ class ilShortLinkTable extends ilTable2GUI
         $this->addMultiCommand('confirmDeleteSelected', $this->lng->txt('delete'));
         $this->setSelectAllCheckbox('shliids');
 
-        $this->setRowTemplate("tpl.summary_row.html", substr($this->shliPlugin->getDirectory(), 2));
+        $this->setRowTemplate("tpl.summary_row.html", $this->shliPlugin->getDirectory());
         $this->setDefaultOrderField('title');
         $this->setDefaultOrderDirection('desc');
 
@@ -96,19 +101,12 @@ class ilShortLinkTable extends ilTable2GUI
         $data = array();
         
         foreach ($shortlinks as $shortLink) {
-            $row['id'] = $shortLink->getId();
+            $row['id'] = '' . $shortLink->getId();
             $row['title'] = $shortLink->getName();
             $row['url'] = $shortLink->getTargetUrl();
             $data[] = $row;
         }
         $this->setData($data);
-    }
-
-    public function addHtmlTo($tpl) : void
-    {
-        $filter_html = $this->renderer->render($this->filter);
-        $table_html = $this->getHTML();
-        $tpl->setContent($filter_html . $table_html);
     }
     
     public function getMyRender() : string
@@ -118,15 +116,21 @@ class ilShortLinkTable extends ilTable2GUI
         return $filter_html . $table_html;
     }
 
-    protected function fillRow($a_set)
+    protected function fillRow($a_set) : void
     {
         // Set parameter
         $this->ilCtrl->setParameterByClass(get_class($this->getParentObject()), 'shliid', $a_set['id']);
         
-        $item = $this->ui->modal()->interruptiveItem($a_set['id'], $a_set['title'], null, $a_set['url']);
+        $item = $this->ui->modal()->interruptiveItem(
+            $a_set['id'],
+            $this->shliPlugin->txt('table_col_title') . ': ' . $a_set['title'],
+            null,
+            $this->shliPlugin->txt('table_col_targeturl') . ': ' . $a_set['url']
+        );
 
         // Needed, but i dont know why.
-        // Cannot delete first table entry without creating+rendering a second modal.
+        // Cmd is 'delete' instead of 'deleteModalShortlink' when not
+        // creating+rendering a second modal.
         $modalEmpty = $this->ui->modal()->interruptive('such empty', 'much empty', '');
         
         $modal = $this->ui->modal()->interruptive(

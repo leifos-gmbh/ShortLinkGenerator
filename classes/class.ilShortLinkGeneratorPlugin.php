@@ -20,38 +20,54 @@ declare(strict_types=1);
  *
  * @author Christoph Ludolf
  */
-class ilShortLinkGeneratorPlugin extends ilUserInterfaceHookPlugin
+class ilShortLinkGeneratorPlugin extends \ilUserInterfaceHookPlugin
 {
+    private const PLUGIN_ID = 'shli';
+    private const PLUGIN_NAME = 'ShortLinkGenerator';
+    
     private ilDBInterface $ilDB;
+    private \ilComponentRepositoryWrite $ilComponentRepository;
 
-    public function __construct()
+    public function __construct(\ilDBInterface $db, \ilComponentRepositoryWrite $component_repository, string $id)
     {
-        parent::__construct();
+        parent::__construct($db, $component_repository, $id);
+
+        $this->ilDB = $db;
+        $this->ilComponentRepository = $component_repository;
+        $this->initAutoLoad();
+    }
+    
+    public static function getInstance() : ilShortLinkGeneratorPlugin
+    {
         global $DIC;
 
-        $this->ilDB = $DIC->database();
+        return new ilShortLinkGeneratorPlugin(
+            $DIC->database(),
+            $DIC["component.repository"],
+            self::PLUGIN_ID
+        );
+    }
+    
+    private function classFileOf($a_classname) : string
+    {
+        return __DIR__ . '/class.' . $a_classname . '.php';
+    }
+
+    private function interfaceFileOf($a_classname) : string
+    {
+        return __DIR__ . '/../interfaces/interface.' . $a_classname . '.php';
+    }
+
+    protected function init() : void
+    {
         $this->initAutoLoad();
     }
-
-    final private function classFileOf($a_classname) : string
-    {
-        return $this->getClassesDirectory() . '/class.' . $a_classname . '.php';
-    }
-
-    final private function interfaceFileOf($a_classname) : string
-    {
-        return $this->getClassesDirectory() . '/../interfaces/interface.' . $a_classname . '.php';
-    }
-
-    protected function init()
-    {
-        $this->initAutoLoad();
-    }
+    
     /**
      * Auto load implementation.
      * @param string class name
      */
-    final private function autoLoad($a_classname) : void
+    private function autoLoad($a_classname) : void
     {
         $class_file = $this->classFileOf($a_classname);
         if (file_exists($class_file)) {
@@ -64,7 +80,7 @@ class ilShortLinkGeneratorPlugin extends ilUserInterfaceHookPlugin
         }
     }
 
-    protected function afterUninstall()
+    protected function afterUninstall() : void
     {
         parent::afterUninstall();
 
@@ -89,6 +105,6 @@ class ilShortLinkGeneratorPlugin extends ilUserInterfaceHookPlugin
 
     public function getPluginName() : string
     {
-        return 'ShortLinkGenerator';
+        return self::PLUGIN_NAME;
     }
 }

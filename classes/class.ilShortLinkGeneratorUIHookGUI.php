@@ -21,6 +21,6 @@ declare(strict_types=1);
  *
  * @author Christoph Ludolf
  */
-class ilShortLinkGeneratorUIHookGUI extends ilUIHookPluginGUI
+class ilShortLinkGeneratorUIHookGUI extends \ilUIHookPluginGUI
 {
 }

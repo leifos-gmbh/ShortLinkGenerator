@@ -6,11 +6,11 @@ Navigate to the ILIAS main directory and create the folder structure with:
     mkdir -p Customizing/global/plugins/Services/UIComponent/UserInterfaceHook
 ```
 
-Clone the 7 branch of the shortlink-plugin from github:
+Clone the 8 branch of the shortlink-plugin from github:
 
 ```bash
     cd Customizing/global/plugins/Services/UIComponent/UserInterfaceHook
-    git clone --branch 7 https://github.com/leifos-gmbh/ShortLinkGenerator.git
+    git clone --branch 8 https://github.com/leifos-gmbh/ShortLinkGenerator.git
 ```
 
 Add the following lines to the .htaccess file located in the ILIAS main
@@ -30,6 +30,18 @@ If the 'IfModule mod_rewrite.c' section does not exist, instead add:
     RewriteCond %{REQUEST_URI} /([A-Z]|[a-z]|[0-9]|_|-)+$
     RewriteRule ^(.*)$ /Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
 </IfModule>
+```
+
+In the ILIAS main directory, run the following command to update the controll structure:
+
+```bash
+    php setup/cli.php update --yes
+```
+
+In the ILIAS main directory, run the composer:
+
+```bash
+    composer dump-autoload
 ```
 
 Finally, the shortlink-plugin needs to be installed by an administrator by selecting the install option for the shortlink-plugin on the "Administration->Plugins" page.
