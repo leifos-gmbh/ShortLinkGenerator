@@ -16,11 +16,18 @@
  *********************************************************************/
 declare(strict_types=1);
 
+use ILIAS\HTTP\GlobalHttpState;
+use ILIAS\UI\Implementation\Factory as UIFactory;
+use ILIAS\UI\Implementation\DefaultRenderer;
+use ILIAS\Refinery\Factory as RefineryFactory;
+use ILIAS\UI\Implementation\Component\Input\Container\Form\Standard as StandardForm;
+use ILIAS\UI\Component\MessageBox\MessageBox;
+
 /**
- *
+ * @ilCtrl_IsCalledBy ilShortLinkGeneratorConfigGUI : ilObjComponentSettingsGUI
  * @author Christoph Ludolf
  */
-class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
+class ilShortLinkGeneratorConfigGUI extends \ilPluginConfigGUI
 {
     private ilLanguage $lng;
     private ilCtrl $ilCtrl;
@@ -29,10 +36,10 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
     private ilToolbarGUI $ilToolbar;
     private ilShortLinkGeneratorPlugin $shliPlugin;
     private ilShortLinkCollection $shortLinkCollection;
-    private \ILIAS\HTTP\GlobalHttpState $http;
-    private \ILIAS\UI\Implementation\Factory $ui;
-    private \ILIAS\UI\Implementation\DefaultRenderer $renderer;
-    private \ILIAS\Refinery\Factory $refinery;
+    private GlobalHttpState $http;
+    private UIFactory $ui;
+    private DefaultRenderer $renderer;
+    private RefineryFactory $refinery;
     
     public function __construct()
     {
@@ -79,9 +86,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
     
     private function buildShortLinkTableForm() : string
     {
-        // Toolbar
         $buttonAction = $this->ilCtrl->getLinkTargetByClass(get_class($this), 'displayShortLinkBuildPage');
-        ;
         $button = $this->ui->button()->standard($this->shliPlugin->txt('gui_button_new_shortlink'), $buttonAction);
 
         $this->ilToolbar->setFormAction($this->ilCtrl->getFormAction($this));
@@ -103,7 +108,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         return (array) $this->http->request()->getParsedBody()['shliids'];
     }
     
-    private function buildShortLinkInputForm(bool $isEditMode) : ILIAS\UI\Implementation\Component\Input\Container\Form\Standard
+    private function buildShortLinkInputForm(bool $isEditMode) : StandardForm
     {
         $validShortLink = $this->refinery->custom()->constraint(function ($v) {
             $shortLink = new ilShortLink(-1, $v, '');
@@ -111,32 +116,23 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         }, $this->shliPlugin->txt('gui_error_shortlink_name_invalid'));
 
         $shortLinkExists = $this->refinery->custom()->constraint(function ($v) {
-            return !$this->shortLinkCollection->containsShortLinkWithName($v);
+            $shortLinksWithName = $this->shortLinkCollection->getAllShortLinksWithName($v);
+            return $shortLinksWithName->count() === 0;
         }, $this->shliPlugin->txt('gui_error_another_shortlink_with_name_exists'));
 
         $shortLinkExistsEditMode = $this->refinery->custom()->constraint(function ($v) {
             $shliid = $this->requestShliid();
-            $shortLinkWithName = $this->shortLinkCollection->getShortLinkByName($v);
-            $newShortLink = $this->shortLinkCollection->getShortLinkById($shliid);
-            return is_null($shortLinkWithName) || $newShortLink->sharesIdWith($shortLinkWithName);
+            $shortLinksWithName = $this->shortLinkCollection->getAllShortLinksWithName($v);
+            $shortLink = $this->shortLinkCollection->getShortLinkById($shliid);
+            return $shortLinksWithName->count() === 0
+                    || $shortLink->sharesIdWith($shortLinksWithName->current());
         }, $this->shliPlugin->txt('gui_error_another_shortlink_with_name_exists'));
         
         $validURL = $this->refinery->custom()->constraint(function ($v) {
             $shortLink = new ilShortLink(-1, '', $v);
             return $shortLink->isURLValid();
         }, $this->shliPlugin->txt('gui_error_shortlink_url_invalid'));
-    
-        $urlExists = $this->refinery->custom()->constraint(function ($v) {
-            return !$this->shortLinkCollection->containsShortLinkWithUrl($v);
-        }, $this->shliPlugin->txt('gui_error_another_shortlink_with_url_exists'));
-        
-        $urlExistsEditMode = $this->refinery->custom()->constraint(function ($v) {
-            $shliid = $this->requestShliid();
-            $shortLinkWithURL = $this->shortLinkCollection->getShortLinkByUrl($v);
-            $newShortLink = $this->shortLinkCollection->getShortLinkById($shliid);
-            return is_null($shortLinkWithURL) || $newShortLink->sharesIdWith($shortLinkWithURL);
-        }, $this->shliPlugin->txt('gui_error_another_shortlink_with_url_exists'));
-        
+
         $outputFormatter = $this->refinery->custom()->transformation(function ($v) {
             list(list($shortLinkName, $targetUrl)) = $v;
             return new ilShortLink(-1, $shortLinkName, $targetUrl);
@@ -172,7 +168,6 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
             
             $urlInput = $this->ui->input()->field()->text('url')
                     ->withLabel($this->shliPlugin->txt('gui_txtinputfield_url'))
-                    ->withAdditionalTransformation($urlExistsEditMode)
                     ->withAdditionalTransformation($validURL)
                     ->withValue($shortLink->getTargetUrl())
                     ->withRequired(true);
@@ -191,7 +186,6 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
             
             $urlInput = $this->ui->input()->field()->text('url')
                     ->withLabel($this->shliPlugin->txt('gui_txtinputfield_url'))
-                    ->withAdditionalTransformation($urlExists)
                     ->withAdditionalTransformation($validURL)
                     ->withRequired(true);
         }
@@ -213,7 +207,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         return $form;
     }
     
-    private function displayShortLinkBuildPage(?\ILIAS\UI\Component\MessageBox\MessageBox $msgBox = null) : void
+    private function displayShortLinkBuildPage(?MessageBox $msgBox = null) : void
     {
         $this->buildEditorTabs();
         $form = $this->buildShortLinkInputForm(false);
@@ -222,7 +216,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $this->tpl->setContent($msgBoxHTML . $formHTML);
     }
     
-    private function displayShortLinkEditPage(?\ILIAS\UI\Component\MessageBox\MessageBox $msgBox = null) : void
+    private function displayShortLinkEditPage(?MessageBox $msgBox = null) : void
     {
         $this->buildEditorTabs();
         $form = $this->buildShortLinkInputForm(true);
@@ -231,7 +225,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $this->tpl->setContent($msgBoxHTML . $formHTML);
     }
     
-    private function displayShortLinkTablePage(?\ILIAS\UI\Component\MessageBox\MessageBox $msgBox = null) : void
+    private function displayShortLinkTablePage(?MessageBox $msgBox = null) : void
     {
         $this->buildTableTabs();
         $tableHTML = $this->buildShortLinkTableForm();
@@ -271,12 +265,13 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
             // Input invalid.
             $this->buildEditorTabs();
             $formHTML = $this->renderer->render([$msgBoxFailure, $form]);
-            $this->tpl->setContent($msgBoxHTML . $formHTML);
+            $this->tpl->setContent($formHTML);
             return;
         }
         
+        // Prevents datetime update if shortlinks are identical
         if (!($shortLinkOld->sharesNameWith($shortLinkNew) && $shortLinkOld->sharesUrlWith($shortLinkNew))) {
-            $this->shortLinkCollection->updateShortLink($shortLinkNew);
+            $this->shortLinkCollection->updateShortLinkByID($shliid, $shortLinkNew->getName(), $shortLinkNew->getTargetUrl());
         }
         
         $this->displayShortLinkTablePage($msgBoxSuccess);
@@ -285,25 +280,22 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
     private function confirmDeleteSelected() : void
     {
         $shortlinkIDs = $this->requestShliidArray();
-        $msgBoxQuestion = $this->ui->messageBox()->confirmation($this->shliPlugin->txt('gui_message_confirm_delete_multiple'));
         $msgBoxFailure = $this->ui->messageBox()->failure($this->shliPlugin->txt('gui_error_select_one'));
         
         if (count($shortlinkIDs) == 0) {
             $this->displayShortLinkTablePage($msgBoxFailure);
-        } else {
-            $confirm = new ilConfirmationGUI();
-            $confirm->setFormAction($this->ilCtrl->getFormAction($this));
-            $confirm->setConfirm($this->lng->txt('delete'), 'deleteSelected');
-            $confirm->setCancel($this->lng->txt('cancel'), 'displayShortLinkTablePage');
-            
-            foreach ($shortlinkIDs as $id) {
-                $shortLink = $this->shortLinkCollection->getShortLinkById((int) $id);
-                $confirm->addItem('shliids[]', $id, $shortLink->getName());
-            }
-            
-            $msgBoxHTML = $this->renderer->render($msgBoxQuestion);
-            $this->tpl->setContent($msgBoxHTML . $confirm->getHTML());
+            return;
         }
+        $confirm = new ilConfirmationGUI();
+        $confirm->setFormAction($this->ilCtrl->getFormAction($this));
+        $confirm->setConfirm($this->lng->txt('delete'), 'deleteSelected');
+        $confirm->setCancel($this->lng->txt('cancel'), 'displayShortLinkTablePage');
+        $confirm->setHeaderText($this->shliPlugin->txt('gui_message_confirm_delete_multiple'));
+        foreach ($shortlinkIDs as $id) {
+            $shortLink = $this->shortLinkCollection->getShortLinkById((int) $id);
+            $confirm->addItem('shliids[]', '' . $id, $shortLink->getName());
+        }
+        $this->tpl->setContent($confirm->getHTML());
     }
 
     private function deleteModalShortLink() : void

@@ -23,108 +23,65 @@ interface ilShortLinkCollection
 {
     /**
      * Creates a new shortlink with the given values as properties.
-     * @param string $slName Name of the new shortlink.
-     * @param string $slUrl Url of the new shortlink.
-     * @return ilShortLink|null Returns the new shortlink, or null if a
-     * shortlink with the given url or name already exists.
+     * @param string $name Name of the new shortlink.
+     * @param string $targetURL Url of the new shortlink.
+     * @return ilShortLink Returns the new shortlink.
+     * @throws ilShortLinkWithNameAlreadyExistsException
+     * @throws ilShortLinkInvalidException
      */
-    public function createShortLink(string $slName, string $slUrl) : ?ilShortLink;
+    public function createShortLink(string $name, string $targetURL) : ilShortLink;
     
     /**
-     * Changes the properties of a shortlink that matches the id of the given
-     * shortlink. The new property values equal the property values of the given
-     * shortlink.
-     * @param ilShortLink $replacement A shortlink that has the id of the
-     * shortlink to update.
-     * @return bool Returns true if a shortlink was updated, False otherwise.
+     * Changes the properties of the shortlink that matches the given id.
+     * @param int $id The id of the shortlink to be updated.
+     * @param string $name The new name of the shortlink.
+     * @param string $targetURL The new target url of the shortlink.
+     * @throws ilShortLinkDoesNotExistException
+     * @throws ilShortLinkInvalidException
      */
-    public function updateShortLink(ilShortLink $replacement) : bool ;
+    public function updateShortLinkByID(int $id, string $name = null, string $targetURL = null) : void;
 
     /**
      * Returns the first occurrance of a shortlink with an id equal to the given
      * id.
      * @param int $id The id to look for.
-     * @return ilShortLink|null Returns the shortlink if found, null otherwise.
+     * @return ilShortLink Returns the shortlink if found.
+     * @throws ilShortLinkDoesNotExistException
      */
-    public function getShortLinkById(int $id) : ?ilShortLink;
+    public function getShortLinkById(int $id) : ilShortLink;
 
     /**
      * Returns the first occurrance of a shortlink with a name equal to the
      * given name.
      * @param string $name The name to look for.
-     * @return ilShortLink|null Returns the shortlink if found, null otherwise.
+     * @return ilShortLinkArrayWrapper Returns a ilShortLinkArrayWrapper
+     * containing all shortlinks that have the given name as their name.
      */
-    public function getShortLinkByName(string $name) : ?ilShortLink;
+    public function getAllShortLinksWithName(string $name) : ilShortLinkArrayWrapper;
     
     /**
      * Returns the first occurrance of a shortlink with an url equal to the
      * given url.
      * @param string $url The url to look for.
-     * @return ilShortLink|null Returns the shortlink if found, null otherwise.
+     * @return ilShortLinkArrayWrapper Returns a ilShortLinkArrayWrapper
+     * containing all shortlinks that have the given url as their url.
      */
-    public function getShortLinkByUrl(string $url) : ?ilShortLink;
+    public function getAllShortLinksWithUrl(string $url) : ilShortLinkArrayWrapper;
 
-    /**
-     * Removes the first occurrance of a shortlink with at least one property
-     * equal to a property of the given shortlink.
-     * @param ilShortLink $shortLink
-     * @return bool True if a shortlink was removed, False otherwise.
-     */
-    public function removeShortLink(ilShortLink $shortLink) : bool;
-    
     /**
      * Removes the first occurrance of a shortlink with an id equal to the given
      * id.
      * @param int $id The id to look for.
-     * @return bool True if a shortlink was removed, False otherwise.
+     * @throws ilShortLinkDoesNotExistException
      */
-    public function removeShortLinkById(int $id) : bool;
+    public function removeShortLinkById(int $id) : void;
     
-    /**
-     * Removes the first occurrance of a shortlink with a name equal to the
-     * given name.
-     * @param string $name The name to look for.
-     * @return bool True if a shortlink was removed, False otherwise.
-     */
-    public function removeShortLinkByName(string $name) : bool;
-    
-    /**
-     * Removes the first occurrance of a shortlink with a target url equal to
-     * the given url.
-     * @param string $url The url to look for.
-     * @return bool True if a shortlink was removed, False otherwise.
-     */
-    public function removeShortLinkByUrl(string $url) : bool;
-    
-    /**
-     * Checks if a shortlink with at least one property similiar to the given
-     * shortlink exists in the collection.
-     * @param ilShortLink $shortLink Shortlink with parameters to check for.
-     * @return bool True if at least one shortlink with one matching property is
-     * found, False otherwise.
-     */
-    public function containsShortLink(ilShortLink $shortLink) : bool;
-        
     /**
      * Checks if a shortlink with the given id exists in the collection.
      * @param int $id The id to look for.
      * @return bool True if a shortlink with the id exists, False otherwise.
      */
     public function containsShortLinkWithId(int $id) : bool;
-    
-    /**
-     * Checks if a shortlink with the given name exists in the collection.
-     * @param string $name The name to look for.
-     * @return bool True if a shortlink with the name exists, False otherwise.
-     */
-    public function containsShortLinkWithName(string $name) : bool;
-    
-    /**
-     * Checks if a shortlink with the given url exists in the collection.
-     * @param string $url The url to look for.
-     * @return bool True if a shortlink with the url exists, False otherwise.
-     */
-    public function containsShortLinkWithUrl(string $url) : bool;
     
     /**
      * Returns an ilShortLinkArrayWrapper containing all shortlinks with a
