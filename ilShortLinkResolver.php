@@ -43,13 +43,13 @@ try {
     }
     
     $ilShortLinkCollection = new ilShortLinkDBCollection();
-    $shortLink = $ilShortLinkCollection->getShortLinkByName($shortLinkName);
+    $shortLinks = $ilShortLinkCollection->getAllShortLinksWithName($shortLinkName);
     
-    if (is_null($shortLink)) {
+    if ($shortLinks->count() === 0) {
         throw new Exception('ShortLink not valid.');
     }
     
-    $target_url = $shortLink->getTargetUrl();
+    $target_url = $shortLinks->current()->getTargetUrl();
     header('Location: ' . $target_url);
 } catch(Exception $e) {
     http_response_code(404);

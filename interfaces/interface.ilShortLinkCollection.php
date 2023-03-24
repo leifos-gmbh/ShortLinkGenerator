@@ -21,31 +21,81 @@
  */
 interface ilShortLinkCollection
 {
-    public function createShortLink(string $slName, string $slUrl) : ?ilShortLink;
+    /**
+     * Creates a new shortlink with the given values as properties.
+     * @param string $name Name of the new shortlink.
+     * @param string $targetURL Url of the new shortlink.
+     * @return ilShortLink Returns the new shortlink.
+     * @throws ilShortLinkWithNameAlreadyExistsException
+     * @throws ilShortLinkInvalidException
+     */
+    public function createShortLink(string $name, string $targetURL) : ilShortLink;
     
-    public function updateShortLink(ilShortLink $replacement) : bool ;
+    /**
+     * Changes the properties of the shortlink that matches the given id.
+     * @param int $id The id of the shortlink to be updated.
+     * @param string $name The new name of the shortlink.
+     * @param string $targetURL The new target url of the shortlink.
+     * @throws ilShortLinkDoesNotExistException
+     * @throws ilShortLinkInvalidException
+     */
+    public function updateShortLinkByID(int $id, string $name = null, string $targetURL = null) : void;
 
-    public function getShortLinkById(int $id) : ?ilShortLink;
+    /**
+     * Returns the first occurrance of a shortlink with an id equal to the given
+     * id.
+     * @param int $id The id to look for.
+     * @return ilShortLink Returns the shortlink if found.
+     * @throws ilShortLinkDoesNotExistException
+     */
+    public function getShortLinkById(int $id) : ilShortLink;
 
-    public function getShortLinkByName(string $name) : ?ilShortLink;
+    /**
+     * Returns the first occurrance of a shortlink with a name equal to the
+     * given name.
+     * @param string $name The name to look for.
+     * @return ilShortLinkArrayWrapper Returns a ilShortLinkArrayWrapper
+     * containing all shortlinks that have the given name as their name.
+     */
+    public function getAllShortLinksWithName(string $name) : ilShortLinkArrayWrapper;
     
-    public function getShortLinkByUrl(string $url) : ?ilShortLink;
+    /**
+     * Returns the first occurrance of a shortlink with an url equal to the
+     * given url.
+     * @param string $url The url to look for.
+     * @return ilShortLinkArrayWrapper Returns a ilShortLinkArrayWrapper
+     * containing all shortlinks that have the given url as their url.
+     */
+    public function getAllShortLinksWithUrl(string $url) : ilShortLinkArrayWrapper;
 
-    public function removeShortLink(ilShortLink $shortLink) : bool;
-        
-    public function removeShortLinkById(int $id) : bool;
+    /**
+     * Removes the first occurrance of a shortlink with an id equal to the given
+     * id.
+     * @param int $id The id to look for.
+     * @throws ilShortLinkDoesNotExistException
+     */
+    public function removeShortLinkById(int $id) : void;
     
-    public function removeShortLinkByName(string $name) : bool;
-    
-    public function removeShortLinkByUrl(string $url) : bool;
-    
-    public function containsShortLink(ilShortLink $shortLink) : bool;
-        
+    /**
+     * Checks if a shortlink with the given id exists in the collection.
+     * @param int $id The id to look for.
+     * @return bool True if a shortlink with the id exists, False otherwise.
+     */
     public function containsShortLinkWithId(int $id) : bool;
     
-    public function containsShortLinkWithName(string $name) : bool;
-    
-    public function containsShortLinkWithUrl(string $url) : bool;
-    
+    /**
+     * Returns an ilShortLinkArrayWrapper containing all shortlinks with a
+     * name that contains $patternName and an url that contains $patternURL.
+     *
+     * Important:
+     * The check for $patternName should not be case sensitive.
+     *
+     * @param string $patternName A string that the shortlink name should
+     * contain.
+     * @param string $patternURL A string that the shortlink target url should
+     * contain.
+     * @return ilShortLinkArrayWrapper An array containing all shortlinks with
+     * a matching name and target url.
+     */
     public function getShortLinksByPattern(string $patternName, string $patternURL) : ilShortLinkArrayWrapper;
 }

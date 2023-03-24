@@ -21,16 +21,7 @@
  */
 class ilShortLinkArrayWrapper implements Iterator
 {
-    /**
-     *
-     * @var array
-     */
     private $shortLinks;
-
-    /**
-     *
-     * @var int
-     */
     private $index;
 
     public function __construct()
@@ -67,5 +58,10 @@ class ilShortLinkArrayWrapper implements Iterator
     public function valid() : bool
     {
         return $this->index < count($this->shortLinks);
+    }
+    
+    public function count() : int
+    {
+        return count($this->shortLinks);
     }
 }

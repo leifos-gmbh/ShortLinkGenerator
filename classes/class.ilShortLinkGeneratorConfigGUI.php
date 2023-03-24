@@ -215,7 +215,7 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
             $slName = $form->getInput('shortlink');
             $slUrl = $form->getInput('targeturl');
             $replacement = new ilShortLink($id, $slName, $slUrl);
-            $this->shortLinkCollection->updateShortLink($replacement);
+            $this->shortLinkCollection->updateShortLinkByID($id, $slName, $slUrl);
 
             ilUtil::sendSuccess($this->lng->txt('settings_saved'), true);
             $this->ilCtrl->redirect($this, 'displayShortLinkTablePage');
@@ -256,20 +256,13 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
             $inputValid = false;
         }
 
-        if ($this->shortLinkCollection->containsShortLinkWithName($slName)) {
+        if ($this->shortLinkCollection->getAllShortLinksWithName($slName)->count() > 0) {
             $txtInputShortLink->setAlert($txtInputShortLink->getAlert()
                     . '<br>'
                     . $this->shliPlugin->txt('gui_error_another_shortlink_with_name_exists'));
             $inputValid = false;
         }
-
-        if ($this->shortLinkCollection->containsShortLinkWithUrl($slUrl)) {
-            $txtInputTargetUrl->setAlert($txtInputTargetUrl->getAlert()
-                    . '<br>'
-                    . $this->shliPlugin->txt('gui_error_another_shortlink_with_url_exists'));
-            $inputValid = false;
-        }
-
+        
         return $inputValid;
     }
 
@@ -285,8 +278,19 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
         $slName = $form->getInput('shortlink');
         $slUrl = $form->getInput('targeturl');
         $shortLinkUpdated = new ilShortLink($id, $slName, $slUrl);
-        $shortLinkWithName = $this->shortLinkCollection->getShortLinkByName($slName);
-        $shortLinkWithUrl = $this->shortLinkCollection->getShortLinkByUrl($slUrl);
+        
+        $allShortLinksWithName = $this->shortLinkCollection->getAllShortLinksWithName($slName);
+        $shortLinkWithName = $allShortLinksWithName->count() > 0 ? $allShortLinksWithName->current() : null;
+        
+        $allShortLinksWithURL = $this->shortLinkCollection->getAllShortLinksWithUrl($slUrl);
+        $shortLinkWithUrl = null;
+        foreach ($allShortLinksWithURL as $shlink) {
+            if ($shlink->getId() === $id) {
+                $shortLinkWithUrl = $shlink;
+                break;
+            }
+        }
+        
         $txtInputShortLink = $form->getItemByPostVar('shortlink');
         $txtInputTargetUrl = $form->getItemByPostVar('targeturl');
 
@@ -308,13 +312,6 @@ class ilShortLinkGeneratorConfigGUI extends ilPluginConfigGUI
             $txtInputShortLink->setAlert($txtInputShortLink->getAlert()
                     . '<br>'
                     . $this->shliPlugin->txt('gui_error_another_shortlink_with_name_exists'));
-            $inputValid = false;
-        }
-
-        if (!is_null($shortLinkWithUrl) && !$shortLinkWithUrl->sharesIdWith($shortLinkUpdated)) {
-            $txtInputTargetUrl->setAlert($txtInputTargetUrl->getAlert()
-                    . '<br>'
-                    . $this->shliPlugin->txt('gui_error_another_shortlink_with_url_exists'));
             $inputValid = false;
         }
 
