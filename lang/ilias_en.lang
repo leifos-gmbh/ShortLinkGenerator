@@ -3,7 +3,7 @@ filter_url_title#:#Target URL
 gui_tab_shortlinks#:#Shortlinks
 gui_title_edit_shortlink_page#:#Edit Shortlink
 gui_title_build_shortlink_page#:#New Shortlink
-gui_message_success_shortlink_saved#:#Shortlink saved successfully;
+gui_message_success_shortlink_saved#:#Shortlink saved successfully.
 gui_message_failed_shortlink_saved#:#Shortlink could not be saved.
 gui_message_confirm_delete_title#:# Delete?
 gui_message_confirm_delete#:#Please confirm the deletion of the listed shortlinks.
