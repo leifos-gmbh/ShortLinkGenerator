@@ -60,4 +60,9 @@ class ilShortLinkArrayWrapper implements Iterator
     {
         return $this->index < count($this->shortLinks);
     }
+    
+    public function count() : int
+    {
+        return count($this->shortLinks);
+    }
 }

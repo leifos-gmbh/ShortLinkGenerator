@@ -58,6 +58,11 @@ class ilShortLinkGeneratorPlugin extends \ilUserInterfaceHookPlugin
         return __DIR__ . '/../interfaces/interface.' . $a_classname . '.php';
     }
 
+    private function exceptionsFileOf($a_classname) : string
+    {
+        return __DIR__ . '/../exceptions/interface.' . $a_classname . '.php';
+    }
+
     protected function init() : void
     {
         $this->initAutoLoad();
@@ -70,13 +75,14 @@ class ilShortLinkGeneratorPlugin extends \ilUserInterfaceHookPlugin
     private function autoLoad($a_classname) : void
     {
         $class_file = $this->classFileOf($a_classname);
-        if (file_exists($class_file)) {
-            include_once $class_file;
-        }
-
         $interface_file = $this->interfaceFileOf($a_classname);
-        if (file_exists($interface_file)) {
-            include_once $interface_file;
+        $exception_file = $this->exceptionsFileOf($a_classname);
+        
+        foreach ([$class_file, $interface_file, $exception_file] as $filename) {
+            if (file_exists($filename)) {
+                include_once $filename;
+                break;
+            }
         }
     }
 

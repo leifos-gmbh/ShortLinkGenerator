@@ -101,7 +101,7 @@ class ilShortLinkTable extends ilTable2GUI
         $data = array();
         
         foreach ($shortlinks as $shortLink) {
-            $row['id'] = '' . $shortLink->getId();
+            $row['id'] = (string) $shortLink->getId();
             $row['title'] = $shortLink->getName();
             $row['url'] = $shortLink->getTargetUrl();
             $data[] = $row;

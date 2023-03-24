@@ -57,7 +57,7 @@ class ilShortLink
                 $this->sharesUrlWith($other);
     }
 
-    public function toString() : string
+    public function __toString() : string
     {
         return 'id:' . $this->id .
                 ' ;sl; ' . $this->shortLink .
@@ -68,13 +68,13 @@ class ilShortLink
     {
         $shortLinkPattern = '/^([a-z]|[A-Z]|[0-9]|_|-)+$/i';
         // preg_match returns 1 if a match occurs
-        return preg_match($shortLinkPattern, $this->shortLink) == 1;
+        return preg_match($shortLinkPattern, $this->shortLink) === 1;
     }
 
     public function isURLValid() : bool
     {
         // filter_var returns the filtered values or false if no match.
-        return filter_var($this->url, FILTER_VALIDATE_URL) != false;
+        return filter_var($this->url, FILTER_VALIDATE_URL) !== false;
     }
 
     public function validate() : bool
@@ -100,7 +100,7 @@ class ilShortLink
         return $this->url;
     }
 
-    public function getLastEdited() : DateTimeImmutable
+    public function getLastEdited() : ?DateTimeImmutable
     {
         return $this->lastEdited;
     }
