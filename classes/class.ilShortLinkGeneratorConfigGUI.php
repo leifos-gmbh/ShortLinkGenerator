@@ -24,7 +24,6 @@ use ILIAS\UI\Implementation\Component\Input\Container\Form\Standard as StandardF
 use ILIAS\UI\Component\MessageBox\MessageBox;
 
 /**
- * @ilCtrl_IsCalledBy ilShortLinkGeneratorConfigGUI : ilObjComponentSettingsGUI
  * @author Christoph Ludolf
  */
 class ilShortLinkGeneratorConfigGUI extends \ilPluginConfigGUI
