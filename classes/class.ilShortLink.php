@@ -100,7 +100,7 @@ class ilShortLink
         return $this->url;
     }
 
-    public function getLastEdited() : DateTimeImmutable
+    public function getLastEdited() : ?DateTimeImmutable
     {
         return $this->lastEdited;
     }
