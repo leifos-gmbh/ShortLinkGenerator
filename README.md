@@ -32,16 +32,16 @@ If the 'IfModule mod_rewrite.c' section does not exist, instead add:
 </IfModule>
 ```
 
-In the ILIAS main directory, run the following command to update the controll structure:
-
-```bash
-    php setup/cli.php update --yes
-```
-
 In the ILIAS main directory, run the composer:
 
 ```bash
     composer dump-autoload
+```
+
+In the ILIAS main directory, run the following command to update the controll structure:
+
+```bash
+    php setup/cli.php update --yes
 ```
 
 Finally, the shortlink-plugin needs to be installed by an administrator by selecting the install option for the shortlink-plugin on the "Administration->Plugins" page.
