@@ -29,6 +29,16 @@ $uri = $_SERVER['REQUEST_URI'];
 $uriParts = explode('/', $uri);
 $shortLinkName = end($uriParts);
 
+if ($shortLinkName === 'terms') {
+    $parts = explode('/', ILIAS_HTTP_PATH);
+    array_splice($parts, -7);
+    $path = implode('/', $parts);
+
+    global $DIC;
+    header('Location: ' . $path . '/'. $DIC->ctrl()->getLinkTargetByClass(ilStartUpGUI::class, 'showTermsOfService'));
+    exit;
+}
+
 
 try {
     // includes short link classes if plugin is not active.
