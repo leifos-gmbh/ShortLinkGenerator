@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 /**
  * This file is part of ILIAS, a powerful learning management system
@@ -17,9 +16,12 @@ declare(strict_types=1);
  *
  *********************************************************************/
 
-/**
- * @author Alex Killing <killing@leifos.de>
- */
+declare(strict_types=1);
+
+namespace Leifos\ShortLink;
+
+use ilException;
+
 class ilShortLinkWithNameAlreadyExistsException extends ilException
 {
     public function __construct(string $name, $a_code = 0)

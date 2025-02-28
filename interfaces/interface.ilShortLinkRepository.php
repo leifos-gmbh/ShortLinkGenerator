@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This file is part of ILIAS, a powerful learning management system
  * published by ILIAS open source e-Learning e.V.
@@ -15,11 +16,11 @@
  *
  *********************************************************************/
 
-/**
- *
- * @author Christoph Ludolf
- */
-interface ilShortLinkCollection
+declare(strict_types=1);
+
+namespace Leifos\ShortLink;
+
+interface ilShortLinkRepository
 {
     /**
      * Creates a new shortlink with the given values as properties.
@@ -54,19 +55,19 @@ interface ilShortLinkCollection
      * Returns the first occurrance of a shortlink with a name equal to the
      * given name.
      * @param string $name The name to look for.
-     * @return ilShortLinkArrayWrapper Returns a ilShortLinkArrayWrapper
+     * @return ilShortLinkCollection Returns a ilShortLinkArrayWrapper
      * containing all shortlinks that have the given name as their name.
      */
-    public function getAllShortLinksWithName(string $name) : ilShortLinkArrayWrapper;
+    public function getAllShortLinksWithName(string $name) : ilShortLinkCollection;
     
     /**
      * Returns the first occurrance of a shortlink with an url equal to the
      * given url.
      * @param string $url The url to look for.
-     * @return ilShortLinkArrayWrapper Returns a ilShortLinkArrayWrapper
+     * @return ilShortLinkCollection Returns a ilShortLinkArrayWrapper
      * containing all shortlinks that have the given url as their url.
      */
-    public function getAllShortLinksWithUrl(string $url) : ilShortLinkArrayWrapper;
+    public function getAllShortLinksWithUrl(string $url) : ilShortLinkCollection;
 
     /**
      * Removes the first occurrance of a shortlink with an id equal to the given
@@ -94,8 +95,8 @@ interface ilShortLinkCollection
      * contain.
      * @param string $patternURL A string that the shortlink target url should
      * contain.
-     * @return ilShortLinkArrayWrapper An array containing all shortlinks with
+     * @return ilShortLinkCollection An array containing all shortlinks with
      * a matching name and target url.
      */
-    public function getShortLinksByPattern(string $patternName, string $patternURL) : ilShortLinkArrayWrapper;
+    public function getShortLinksByPattern(string $patternName, string $patternURL) : ilShortLinkCollection;
 }

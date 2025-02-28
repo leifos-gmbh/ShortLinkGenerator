@@ -1,5 +1,4 @@
 <?php
-declare(strict_types=1);
 
 /**
  * This file is part of ILIAS, a powerful learning management system
@@ -17,11 +16,12 @@ declare(strict_types=1);
  *
  *********************************************************************/
 
-/**
- * ilCtrl exceptions
- *
- * @author Christoph Ludolf
- */
+declare(strict_types=1);
+
+namespace Leifos\ShortLink;
+
+use ilException;
+
 class ilShortLinkInvalidException extends ilException
 {
     public function __construct(ilShortLink $shortLink, $a_code = 0)

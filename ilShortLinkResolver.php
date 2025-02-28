@@ -1,5 +1,5 @@
 <?php
-declare(strict_types=1);
+
 /**
 * This file is part of ILIAS, a powerful learning management system
 * published by ILIAS open source e-Learning e.V.
@@ -15,6 +15,8 @@ declare(strict_types=1);
 * https://github.com/ILIAS-eLearning
 *
 *********************************************************************/
+
+declare(strict_types=1);
 
 // Change working directory to ILIAS main directory.
 $inPluginDirectory = false;
@@ -32,17 +34,17 @@ $shortLinkName = end($uriParts);
 
 try {
     // includes short link classes if plugin is not active.
-    if (!class_exists('ilShortLinkDBCollection')) {
+    if (!class_exists('ilShortLinkDBRepository')) {
         // Change working directory to the plugin directory
         $inPluginDirectory = true;
         chdir('Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/');
-        include_once 'interfaces/interface.ilShortLinkCollection.php';
-        include_once 'classes/class.ilShortLinkArrayWrapper.php';
+        include_once 'interfaces/interface.ilShortLinkRepository.php';
+        include_once 'classes/class.ilShortLinkCollection.php';
         include_once 'classes/class.ilShortLink.php';
-        include_once 'classes/class.ilShortLinkDBCollection.php';
+        include_once 'classes/class.ilShortLinkDBRepository.php';
     }
     
-    $ilShortLinkCollection = new ilShortLinkDBCollection();
+    $ilShortLinkCollection = new ilShortLinkDBRepository();
     $shortLinks = $ilShortLinkCollection->getAllShortLinksWithName($shortLinkName);
     
     if ($shortLinks->count() === 0) {

@@ -1,6 +1,7 @@
 filter_shortlink_title#:#Titel
 filter_url_title#:#Ziel URL
 gui_tab_shortlinks#:#Shortlinks
+gui_title_table#:#Shortlinks
 gui_title_edit_shortlink_page#:#Shortlink Bearbeiten
 gui_title_build_shortlink_page#:#Neuer Shortlink
 gui_message_success_shortlink_saved#:#Shortlink erfolgreich gespeichert.

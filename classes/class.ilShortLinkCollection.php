@@ -1,5 +1,5 @@
 <?php
-declare(strict_types=1);
+
 /**
  * This file is part of ILIAS, a powerful learning management system
  * published by ILIAS open source e-Learning e.V.
@@ -16,52 +16,56 @@ declare(strict_types=1);
  *
  *********************************************************************/
 
-/**
- *
- * @author Christoph Ludolf
- */
-class ilShortLinkArrayWrapper implements Iterator
+declare(strict_types=1);
+
+namespace Leifos\ShortLink;
+
+use Countable;
+use Iterator;
+
+class ilShortLinkCollection implements Iterator, Countable
 {
-    private array $shortLinks;
-    private int $index;
+    /** @var ilShortLink[] */
+    protected array $shortLinks;
+    protected int $index;
 
     public function __construct()
     {
-        $this->shortLinks = array();
+        $this->shortLinks = [];
         $this->index = 0;
     }
 
-    public function add(ilShortLink $shortLink) : void
+    public function add(ilShortLink $shortLink): void
     {
         $this->shortLinks[] = $shortLink;
     }
 
-    public function rewind() : void
+    public function rewind(): void
     {
         $this->index = 0;
     }
 
-    public function current()
+    public function current(): ilShortLink
     {
         return $this->shortLinks[$this->index];
     }
 
-    public function next() : void
+    public function next(): void
     {
         $this->index++;
     }
 
-    public function key() : \scalar
+    public function key(): int
     {
         return $this->index;
     }
 
-    public function valid() : bool
+    public function valid(): bool
     {
-        return $this->index < count($this->shortLinks);
+        return isset($this->shortLinks[$this->index]);
     }
-    
-    public function count() : int
+
+    public function count(): int
     {
         return count($this->shortLinks);
     }
