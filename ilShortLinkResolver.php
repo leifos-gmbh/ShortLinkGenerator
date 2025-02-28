@@ -41,9 +41,9 @@ try {
         $inPluginDirectory = true;
         chdir('Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/');
         include_once 'interfaces/interface.ilShortLinkRepository.php';
-        include_once 'classes/class.ilShortLinkCollection.php';
-        include_once 'classes/class.ilShortLink.php';
-        include_once 'classes/class.ilShortLinkDBRepository.php';
+        include_once 'classes/ShortLink/class.ilShortLinkCollection.php';
+        include_once 'classes/ShortLink/class.ilShortLink.php';
+        include_once 'classes/ShortLink/class.ilShortLinkDBRepository.php';
     }
     
     $ilShortLinkCollection = new ilShortLinkDBRepository();
