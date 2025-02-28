@@ -18,12 +18,6 @@
 
 declare(strict_types=1);
 
-namespace Leifos\ShortLink;
-
-use ilComponentFactory;
-use ilComponentRepositoryWrite;
-use ilUserInterfaceHookPlugin;
-
 class ilShortLinkGeneratorPlugin extends ilUserInterfaceHookPlugin
 {
     protected const PLUGIN_ID = 'shli';

@@ -23,6 +23,8 @@ namespace Leifos\ShortLink;
 use Closure;
 use ILIAS\UI\Factory as UIFactory;
 use ILIAS\UI\Renderer;
+use ilShortLinkGeneratorConfigGUI;
+use ilShortLinkGeneratorPlugin;
 use ilTable2GUI;
 use ilUIFilterService;
 

@@ -19,6 +19,8 @@
 declare(strict_types=1);
 
 // Change working directory to ILIAS main directory.
+use Leifos\ShortLink\ilShortLinkDBRepository;
+
 $inPluginDirectory = false;
 chdir('../../../../../../../');
 

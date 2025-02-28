@@ -18,8 +18,6 @@
 
 declare(strict_types=1);
 
-namespace Leifos\ShortLink;
-
 class ilShortLinkGeneratorUIHookGUI extends \ilUIHookPluginGUI
 {
 }

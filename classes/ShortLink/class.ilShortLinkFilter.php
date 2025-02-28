@@ -24,6 +24,8 @@ use ilCtrl;
 use ILIAS\UI\Component\Input\Container\Filter\Standard as StandardFilter;
 use ILIAS\UI\Factory as UIFactory;
 use ILIAS\UI\Renderer;
+use ilShortLinkGeneratorConfigGUI;
+use ilShortLinkGeneratorPlugin;
 use ilUIFilterService;
 use InvalidArgumentException;
 

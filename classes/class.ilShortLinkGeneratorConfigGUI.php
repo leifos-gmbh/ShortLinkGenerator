@@ -18,12 +18,6 @@
 
 declare(strict_types=1);
 
-namespace Leifos\ShortLink;
-
-use Exception;
-use ilConfirmationGUI;
-use ilCtrl;
-use ilGlobalTemplateInterface;
 use ILIAS\HTTP\GlobalHttpState;
 use ILIAS\HTTP\Wrapper\WrapperFactory;
 use ILIAS\Refinery\Factory as RefineryFactory;
@@ -31,11 +25,10 @@ use ILIAS\UI\Component\MessageBox\MessageBox;
 use ILIAS\UI\Factory as UIFactory;
 use ILIAS\UI\Implementation\Component\Input\Container\Form\Standard as StandardForm;
 use ILIAS\UI\Renderer;
-use ilLanguage;
-use ilPluginConfigGUI;
-use ilTabsGUI;
-use ilToolbarGUI;
-use ilUIFilterService;
+use Leifos\ShortLink\ilShortLink;
+use Leifos\ShortLink\ilShortLinkDBRepository;
+use Leifos\ShortLink\ilShortLinkRepository;
+use Leifos\ShortLink\ilShortLinkTable;
 
 /**
  * @ilCtrl_IsCalledBy ilShortLinkGeneratorConfigGUI : ilObjComponentSettingsGUI
