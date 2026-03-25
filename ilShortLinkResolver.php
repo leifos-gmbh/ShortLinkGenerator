@@ -18,23 +18,23 @@
 
 declare(strict_types=1);
 
-// Change working directory to ILIAS main directory.
 use Leifos\ShortLink\ilShortLinkDBRepository;
 
-$inPluginDirectory = false;
-chdir('../../../../../../../../');
-
-include_once './components/ILIAS/Context/classes/class.ilContext.php';
-ilContext::init(ilContext::CONTEXT_SHIBBOLETH);
-
-require_once("./components/ILIAS/Init/classes/class.ilInitialisation.php");
-ilInitialisation::initILIAS();
-
-$uri = $_SERVER['REQUEST_URI'];
-$uriParts = explode('/', $uri);
-$shortLinkName = end($uriParts);
-
 try {
+    // Change working directory to ILIAS main directory.
+
+    chdir('../../../../../../../../');
+
+    include_once './components/ILIAS/Context/classes/class.ilContext.php';
+    ilContext::init(ilContext::CONTEXT_SHIBBOLETH);
+
+    require_once './vendor/composer/vendor/autoload.php';
+    ilInitialisation::initILIAS();
+
+    $uri = $_SERVER['REQUEST_URI'];
+    $uriParts = explode('/', $uri);
+    $shortLinkName = end($uriParts);
+
     // includes short link classes if plugin is not active.
     if (!class_exists('ilShortLinkDBRepository')) {
         // Change working directory to the plugin directory
