@@ -25,6 +25,7 @@ use DateTimeImmutable;
 class ilShortLink
 {
     protected const SHORTLINK_PATTERN = '/^([a-z]|[A-Z]|[0-9]|_|-)+$/i';
+
     public function __construct(
         protected int $id,
         protected string $shortLink,
@@ -33,23 +34,27 @@ class ilShortLink
     ) {
     }
 
-    public function sharesIdWith(ilShortLink $other): bool
-    {
+    public function sharesIdWith(
+        ilShortLink $other
+    ): bool {
         return $other->id == $this->id;
     }
 
-    public function sharesNameWith(ilShortLink $other): bool
-    {
+    public function sharesNameWith(
+        ilShortLink $other
+    ): bool {
         return strcmp($this->shortLink, $other->shortLink) == 0;
     }
 
-    public function sharesUrlWith(ilShortLink $other): bool
-    {
+    public function sharesUrlWith(
+        ilShortLink $other
+    ): bool {
         return strcmp($this->url, $other->url) == 0;
     }
 
-    public function sharesAPropertyWith(ilShortLink $other): bool
-    {
+    public function sharesAPropertyWith(
+        ilShortLink $other
+    ): bool {
         return $this->sharesIdWith($other) ||
                 $this->sharesNameWith($other) ||
                 $this->sharesUrlWith($other);

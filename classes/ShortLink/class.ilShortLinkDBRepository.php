@@ -28,8 +28,8 @@ use SplDoublyLinkedList;
 
 class ilShortLinkDBRepository implements ilShortLinkRepository
 {
-    private SplDoublyLinkedList $shortLinks;
-    private ilDBInterface $ilDB;
+    protected SplDoublyLinkedList $shortLinks;
+    protected ilDBInterface $ilDB;
 
     public function __construct()
     {
@@ -54,8 +54,10 @@ class ilShortLinkDBRepository implements ilShortLinkRepository
         }
     }
 
-    private function saveShortLinkToDB($name, $targetURL): int
-    {
+    private function saveShortLinkToDB(
+        string $name,
+        string $targetURL
+    ): int {
         $dateTimeImm = new DateTimeImmutable('now', new DateTimeZone('Utc'));
         $id = (int) $this->ilDB->nextId('uico_uihk_shli_items');
         $values = array(
@@ -64,44 +66,41 @@ class ilShortLinkDBRepository implements ilShortLinkRepository
             'url' => array('text', $targetURL),
             'last_update' => array('timestamp', $dateTimeImm->format('Y-m-d H:i:s'))
         );
-
         $this->ilDB->insert('uico_uihk_shli_items', $values);
         return $id;
     }
 
-    private function updateShortLinkInDB(ilShortLink $shortLink): void
-    {
+    private function updateShortLinkInDB(
+        ilShortLink $shortLink
+    ): void {
         $dateTimeImm = new DateTimeImmutable('now', new DateTimeZone('Utc'));
-
         $query = 'UPDATE uico_uihk_shli_items SET' .
                 ' id = ' . $this->ilDB->quote($shortLink->getId(), 'integer') .
                 ', title = ' . $this->ilDB->quote($shortLink->getName(), 'text') .
                 ', url = ' . $this->ilDB->quote($shortLink->getTargetUrl(), 'text') .
                 ', last_update = ' . $this->ilDB->quote($dateTimeImm->format('Y-m-d H:i:s'), 'timestamp') .
                 ' WHERE id = ' . $this->ilDB->quote($shortLink->getId(), 'integer') . ';';
-
         $this->ilDB->manipulate($query);
     }
 
-    private function remShortLinkFromDB(ilShortLink $shortLink): void
-    {
+    private function remShortLinkFromDB(
+        ilShortLink $shortLink
+    ): void {
         $id = $shortLink->getId();
-
         $query = 'DELETE FROM uico_uihk_shli_items WHERE id = ' .
                 $this->ilDB->quote($id, 'integer');
-
         $this->ilDB->manipulate($query);
     }
 
-    private function swapElements(int $index1, int $index2): void
-    {
+    private function swapElements(
+        int $index1,
+        int $index2
+    ): void {
         $index1exists = $this->shortLinks->offsetExists($index1);
         $index2exists = $this->shortLinks->offsetExists($index2);
-
         if (!$index1exists || !$index2exists) {
             throw new OutOfBoundsException('Index out of bounds.');
         }
-
         $tmp1 = $this->shortLinks->offsetGet($index1);
         $tmp2 = $this->shortLinks->offsetGet($index2);
         $this->shortLinks->offsetSet($index1, $tmp2);
@@ -112,12 +111,10 @@ class ilShortLinkDBRepository implements ilShortLinkRepository
     {
         $lastIndex = $this->shortLinks->count() - 1;
         $index = -1;
-
         // Zero elements in DB.
         if ($lastIndex === -1) {
             return false;
         }
-
         $this->shortLinks->rewind();
         for (;$this->shortLinks->valid(); $this->shortLinks->next()) {
             $currentShortLink = $this->shortLinks->current();
@@ -126,43 +123,42 @@ class ilShortLinkDBRepository implements ilShortLinkRepository
                 break;
             }
         }
-
         // No shortlink with id found.
         if ($index === -1) {
             return false;
         }
-
         try {
             $this->swapElements($index, $lastIndex);
             $this->shortLinks->pop();
         } catch (OutOfBoundsException $e) {
             return false;
         }
-
         return true;
     }
 
-    public function createShortLink(string $name, string $targetURL): ilShortLink
-    {
+    public function createShortLink(
+        string $name,
+        string $targetURL
+    ): ilShortLink {
         $dummyShortLink = new ilShortLink(-1, $name, $targetURL);
         if (!$dummyShortLink->validate()) {
             throw new ilShortLinkInvalidException($dummyShortLink);
         }
-
         $shortLinksWithName = $this->getAllShortLinksWithName($name);
         if ($shortLinksWithName->count() !== 0) {
             throw new ilShortLinkWithNameAlreadyExistsException($name);
         }
-
         $id = $this->saveShortLinkToDB($name, $targetURL);
         $newShortLink = new ilShortLink($id, $name, $targetURL);
         $this->shortLinks->push($newShortLink);
-
         return $newShortLink;
     }
 
-    public function updateShortLinkByID(int $id, string $name = null, string $targetURL = null): void
-    {
+    public function updateShortLinkByID(
+        int $id,
+        string $name = null,
+        string $targetURL = null
+    ): void {
         $oldShortLink = $this->getShortLinkById($id);
 
         $newName = is_null($name) ? $oldShortLink->getName() : $name;
@@ -179,8 +175,9 @@ class ilShortLinkDBRepository implements ilShortLinkRepository
         $this->shortLinks->push($newShortLink);
     }
 
-    public function getShortLinkById(int $id): ilShortLink
-    {
+    public function getShortLinkById(
+        int $id
+    ): ilShortLink {
         $this->shortLinks->rewind();
         for (;$this->shortLinks->valid(); $this->shortLinks->next()) {
             $currentShortLink = $this->shortLinks->current();
@@ -191,8 +188,9 @@ class ilShortLinkDBRepository implements ilShortLinkRepository
         throw new ilShortLinkDoesNotExistException(new ilShortLink($id, '', ''));
     }
 
-    public function getAllShortLinksWithName(string $name): ilShortLinkCollection
-    {
+    public function getAllShortLinksWithName(
+        string $name
+    ): ilShortLinkCollection {
         $shortLinksWrapper = new ilShortLinkCollection();
         $this->shortLinks->rewind();
         for (;$this->shortLinks->valid(); $this->shortLinks->next()) {
@@ -204,8 +202,9 @@ class ilShortLinkDBRepository implements ilShortLinkRepository
         return $shortLinksWrapper;
     }
 
-    public function getAllShortLinksWithUrl(string $url): ilShortLinkCollection
-    {
+    public function getAllShortLinksWithUrl(
+        string $url
+    ): ilShortLinkCollection {
         $shortLinksWrapper = new ilShortLinkCollection();
         $this->shortLinks->rewind();
         for (;$this->shortLinks->valid(); $this->shortLinks->next()) {
@@ -217,15 +216,17 @@ class ilShortLinkDBRepository implements ilShortLinkRepository
         return $shortLinksWrapper;
     }
 
-    public function removeShortLinkById(int $id): void
-    {
+    public function removeShortLinkById(
+        int $id
+    ): void {
         $shortLink = $this->getShortLinkById($id);
         $this->removeShortLinkFromCollectionByID($id);
         $this->remShortLinkFromDB($shortLink);
     }
 
-    public function containsShortLinkWithId(int $id): bool
-    {
+    public function containsShortLinkWithId(
+        int $id
+    ): bool {
         try {
             $this->getShortLinkById($id);
             return true;
@@ -234,21 +235,20 @@ class ilShortLinkDBRepository implements ilShortLinkRepository
         }
     }
 
-    public function getShortLinksByPattern(string $patternName, string $patternURL): ilShortLinkCollection
-    {
+    public function getShortLinksByPattern(
+        string $patternName,
+        string $patternURL
+    ): ilShortLinkCollection {
         $shortlinksWrapper = new ilShortLinkCollection();
-
         $this->shortLinks->rewind();
         for (;$this->shortLinks->valid(); $this->shortLinks->next()) {
             $currentShortLink = $this->shortLinks->current();
             $patternNameLowerCase = strtolower(trim($patternName));
             $nameLowerCase = strtolower($currentShortLink->getName());
-
             $containsName = empty($patternName)
                     || str_contains($nameLowerCase, $patternNameLowerCase);
             $containsUrl = empty($patternURL)
                     || str_contains($currentShortLink->getTargetUrl(), trim($patternURL));
-
             if ($containsName && $containsUrl) {
                 $shortlinksWrapper->add($currentShortLink);
             }

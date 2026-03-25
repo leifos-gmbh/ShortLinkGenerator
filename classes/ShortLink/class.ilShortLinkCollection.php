@@ -35,8 +35,9 @@ class ilShortLinkCollection implements Iterator, Countable
         $this->index = 0;
     }
 
-    public function add(ilShortLink $shortLink): void
-    {
+    public function add(
+        ilShortLink $shortLink
+    ): void {
         $this->shortLinks[] = $shortLink;
     }
 

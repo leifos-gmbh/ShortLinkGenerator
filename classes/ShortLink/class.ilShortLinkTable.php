@@ -30,10 +30,10 @@ use ilUIFilterService;
 
 class ilShortLinkTable extends ilTable2GUI
 {
-    private ilShortLinkFilter $shliFilter;
-    private ilShortLinkGeneratorConfigGUI $parent;
-    private Closure $shliTxt;
-    private Closure $lngTxt;
+    protected ilShortLinkFilter $shliFilter;
+    protected ilShortLinkGeneratorConfigGUI $parent;
+    protected Closure $shliTxt;
+    protected Closure $lngTxt;
 
     public function __construct(
         protected \ilCtrl $ctrl,
@@ -41,9 +41,9 @@ class ilShortLinkTable extends ilTable2GUI
         protected Renderer $renderer,
         protected ilUIFilterService $filter_service,
         protected ilShortLinkGeneratorPlugin $shli_plugin,
-        $a_parent_obj,
-        $a_parent_cmd = "",
-        $a_template_context = "",
+        ilShortLinkGeneratorConfigGUI $a_parent_obj,
+        string $a_parent_cmd = "",
+        string $a_template_context = "",
     ) {
         $this->setId('shli_table'); // bevor constructor
         parent::__construct($a_parent_obj, $a_parent_cmd, $a_template_context);
@@ -156,7 +156,6 @@ class ilShortLinkTable extends ilTable2GUI
         $this->tpl->setVariable('OBJ_TITLE', $a_set['title']);
         $this->tpl->setVariable('OBJ_URL', $a_set['url']);
         $this->tpl->setVariable('OBJ_ACTION', $dropDownHTML);
-
         $this->ctrl->clearParameterByClass(get_class($this->parent), 'shliid');
     }
 }
