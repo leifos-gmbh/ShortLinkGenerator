@@ -17,7 +17,7 @@ Run the composer in the ILIAS root directory:
 ```
 
 ### .htaccess patch
-Important: Beginning with ILIAS 10, everytime the composer is executed, the .htaccess file is reset and the patch needs to be applied again.
+Important: Beginning with ILIAS 10, everytime the composer is executed, any changes to the .htaccess file are removed. Therefore the patch needs to be applied again after every composer execution.
 
 
 Add the following lines to the .htaccess file located in at <ILIAS root>/public/.htaccess
