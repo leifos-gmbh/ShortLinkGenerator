@@ -22,12 +22,12 @@ declare(strict_types=1);
 use Leifos\ShortLink\ilShortLinkDBRepository;
 
 $inPluginDirectory = false;
-chdir('../../../../../../../');
+chdir('../../../../../../../../');
 
-include_once './Services/Context/classes/class.ilContext.php';
+include_once './components/ILIAS/Context/classes/class.ilContext.php';
 ilContext::init(ilContext::CONTEXT_SHIBBOLETH);
 
-require_once("Services/Init/classes/class.ilInitialisation.php");
+require_once("./components/ILIAS/Init/classes/class.ilInitialisation.php");
 ilInitialisation::initILIAS();
 
 $uri = $_SERVER['REQUEST_URI'];
@@ -38,27 +38,25 @@ try {
     // includes short link classes if plugin is not active.
     if (!class_exists('ilShortLinkDBRepository')) {
         // Change working directory to the plugin directory
-        $inPluginDirectory = true;
-        chdir('Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/');
-        include_once 'interfaces/interface.ilShortLinkRepository.php';
-        include_once 'classes/ShortLink/class.ilShortLinkCollection.php';
-        include_once 'classes/ShortLink/class.ilShortLink.php';
-        include_once 'classes/ShortLink/class.ilShortLinkDBRepository.php';
+        chdir('./public/Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/');
+        include_once './interfaces/interface.ilShortLinkRepository.php';
+        include_once './classes/ShortLink/class.ilShortLinkCollection.php';
+        include_once './classes/ShortLink/class.ilShortLink.php';
+        include_once './classes/ShortLink/class.ilShortLinkDBRepository.php';
+        chdir('../../../../../../../../');
     }
-    
+
     $ilShortLinkCollection = new ilShortLinkDBRepository();
     $shortLinks = $ilShortLinkCollection->getAllShortLinksWithName($shortLinkName);
-    
+
     if ($shortLinks->count() === 0) {
         throw new Exception('ShortLink not valid.');
     }
-    
+
     $target_url = $shortLinks->current()->getTargetUrl();
     header('Location: ' . $target_url);
 } catch(Exception $e) {
     http_response_code(404);
-    if (!$inPluginDirectory) {
-        chdir('Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/');
-    }
+    chdir('./public/Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/');
     readfile('./templates/errorpage/tpl.custom404ErrorPage.html');
 }

@@ -1,4 +1,5 @@
 # Shortlink Generator
+
 ## Installation
 Navigate to the ILIAS root directory and execute the following commands:
 ```shell
@@ -14,6 +15,10 @@ Run the composer in the ILIAS root directory:
 ```bash
     composer du
 ```
+
+### .htaccess patch
+Important: Beginning with ILIAS 10, everytime the composer is executed, the .htaccess file is reset and the patch needs to be applied again.
+
 
 Add the following lines to the .htaccess file located in at <ILIAS root>/public/.htaccess
 directory, or Apache-Config, at the end of the section 'IfModule mod_rewrite.c':
@@ -31,6 +36,7 @@ If the 'IfModule mod_rewrite.c' section does not exist, instead add:
     RewriteRule ^(.*)$ /Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
 </IfModule>
 ```
+
 
 ## Configuration
 Navigate to the ILIAS plugin administration and install the plugin. 
