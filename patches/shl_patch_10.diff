@@ -1,0 +1,13 @@
+diff --git a/components/ILIAS/Init/resources/.htaccess b/components/ILIAS/Init/resources/.htaccess
+index a41f331680e..57686f661ea 100755
+--- a/components/ILIAS/Init/resources/.htaccess
++++ b/components/ILIAS/Init/resources/.htaccess
+@@ -13,6 +13,8 @@
+ 	RewriteCond %{HTTP_USER_AGENT} ^(DavClnt)$
+ 	RewriteCond %{REQUEST_METHOD} ^(OPTIONS)$
+ 	RewriteRule .* "-" [R=401,L]
++    RewriteCond %{REQUEST_URI} ^/([A-Z]|[a-z]|[0-9]|_|-)+$
++    RewriteRule ^(.*)$ /Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
+ </IfModule>
+ <IfModule mod_alias.c>
+ 	RedirectMatch 404 /\.git

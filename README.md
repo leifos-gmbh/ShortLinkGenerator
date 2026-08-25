@@ -17,24 +17,20 @@ Run the composer in the ILIAS root directory:
 ```
 
 ### .htaccess patch
-Important: Beginning with ILIAS 10, everytime the composer is executed, any changes to the .htaccess file are removed. Therefore the patch needs to be applied again after every composer execution.
-
-
-Add the following lines to the .htaccess file located in at <ILIAS root>/public/.htaccess
-directory, or Apache-Config, at the end of the section 'IfModule mod_rewrite.c':
-```apacheconf
-    RewriteEngine On # <-- Only needed if the rewrite engine is not already enabled.
-    RewriteCond %{REQUEST_URI} ^/([A-Z]|[a-z]|[0-9]|_|-)+$
-    RewriteRule ^(.*)$ /Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
+## Apply the Patch
+Navigate to the ILIAS root directory and apply the patch:
+```shell
+patch -l -p1 < public/Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/patches/shl_patch_10.diff
+```
+Afterwards run the composer, for example:
+```shell
+php composer du
 ```
 
-If the 'IfModule mod_rewrite.c' section does not exist, instead add:
-```apacheconf
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteCond %{REQUEST_URI} ^/([A-Z]|[a-z]|[0-9]|_|-)+$
-    RewriteRule ^(.*)$ /Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/ilShortLinkResolver.php [L]
-</IfModule>
+## Remove the Patch
+To remove the patch, navigate to the ILIAS root directory and execute the following command:
+```shell
+patch -R -p1 < public/Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/ShortLinkGenerator/patches/shl_patch_10.diff
 ```
 
 
